@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+
+# Virtual Environment
+.venv/
+
+# Environment variables
+.env
+
+# Node
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+
+# Coverage
+htmlcov/
+.coverage
+
+# Docker
+postgres_data/
+redis_data/
+
+# Cursor
+.cursor/
