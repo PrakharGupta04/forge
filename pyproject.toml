@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forge-eval"
+version = "0.1.0"
+description = "Open evaluation framework for multi-step LLM agents"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.111",
+    "uvicorn[standard]",
+    "pydantic>=2",
+    "langchain>=0.2",
+    "langchain-groq",
+    "langchain-community",
+    "groq",
+    "ollama",
+    "psycopg2-binary",
+    "redis",
+    "python-dotenv",
+    "sentence-transformers",
+    "numpy",
+    "httpx",
+    "pytest",
+    "pytest-asyncio",
+    "duckduckgo-search",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "ruff",
+    "mypy",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["forge*"]
