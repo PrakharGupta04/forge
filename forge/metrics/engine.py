@@ -11,6 +11,7 @@ import logging
 from typing import Optional
 
 from forge.metrics.base import BaseMetric
+from forge.metrics.task_completion import TaskCompletionMetric
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,9 @@ logger = logging.getLogger(__name__)
 class MetricEngine:
     """Run all (or a subset of) registered metrics on a trajectory."""
 
-    ALL_METRICS: list[type[BaseMetric]] = []  # populated after all metrics are implemented
+    ALL_METRICS: list[type[BaseMetric]] = [
+        TaskCompletionMetric,
+    ]  # populated as additional metrics are implemented
 
     def __init__(self, metric_names: Optional[list[str]] = None) -> None:
         self.metric_names = metric_names
