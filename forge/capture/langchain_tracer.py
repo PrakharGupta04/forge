@@ -57,12 +57,7 @@ class ForgeTracer(BaseCallbackHandler):
         try:
             duration_ms = int((time.time() - (self._step_start or time.time())) * 1000)
             output_text = response.generations[0][0].text
-
-            llm_output = getattr(response, "llm_output", None)
-            if llm_output is None:
-                tokens = 0
-            else:
-                tokens = llm_output.get("token_usage", {}).get("total_tokens", 0) or 0
+            tokens = self._extract_tokens(response)
 
             self.trajectory.steps.append(
                 {
@@ -76,6 +71,69 @@ class ForgeTracer(BaseCallbackHandler):
             )
         except Exception as exc:
             logger.warning("ForgeTracer.on_llm_end failed: %s", exc)
+
+    def _extract_tokens(self, response) -> int:
+        """Best-effort total-token extraction across LangChain providers/versions.
+
+        LangChain's ``LLMResult.llm_output`` is populated inconsistently across
+        provider integrations (OpenAI vs Groq vs Anthropic) and across major
+        LangChain versions. This helper tries the known shapes in order and
+        returns the first non-zero integer found. If every path yields zero
+        (or is absent), returns ``0`` and emits a DEBUG log line — the missing
+        token count is visible in logs without polluting the trajectory with
+        fabricated estimates. Any unexpected exception swallowed -> ``0``.
+
+        Paths attempted (in order):
+
+        1. ``response.llm_output["token_usage"]["total_tokens"]``
+           — canonical LangChain / OpenAI shape.
+        2. ``response.llm_output["usage"]["total_tokens"]``
+           — observed in some ``langchain-groq`` releases.
+        3. ``response.llm_output["usage"]["input_tokens"] +
+           response.llm_output["usage"]["output_tokens"]``
+           — Anthropic-style split-field naming.
+        4. Iterate ``response.generations[0]`` and sum numeric values in each
+           generation's ``generation_info["finish_reason_details"]``. Silently
+           skips generations whose ``generation_info`` is absent.
+        """
+        try:
+            llm_output = getattr(response, "llm_output", None) or {}
+
+            token_usage = llm_output.get("token_usage") or {}
+            t = token_usage.get("total_tokens", 0) or 0
+            if t:
+                return int(t)
+
+            usage = llm_output.get("usage") or {}
+            t = usage.get("total_tokens", 0) or 0
+            if t:
+                return int(t)
+
+            t = (usage.get("input_tokens", 0) or 0) + (usage.get("output_tokens", 0) or 0)
+            if t:
+                return int(t)
+
+            generations = getattr(response, "generations", None) or []
+            if generations:
+                total = 0
+                for gen in generations[0]:
+                    info = getattr(gen, "generation_info", None)
+                    if info is None:
+                        continue
+                    details = info.get("finish_reason_details", {})
+                    if isinstance(details, dict):
+                        for v in details.values():
+                            if isinstance(v, (int, float)):
+                                total += int(v)
+                    elif isinstance(details, (int, float)):
+                        total += int(details)
+                if total:
+                    return total
+
+            logger.debug("token count unavailable for this provider/response format")
+            return 0
+        except Exception:
+            return 0
 
     def on_tool_start(self, serialized, input_str, **kwargs) -> None:
         try:
