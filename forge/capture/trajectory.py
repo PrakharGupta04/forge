@@ -28,8 +28,27 @@ class Trajectory:
     total_tokens: int = 0
     metadata: Optional[dict] = None
 
+    # --- Optional fields for downstream metrics (added in Phase 4 schema bump).
+    # All default to None so old code, old JSON, and the tracer (which never
+    # populates them) remain fully compatible.
+    conversation_history: Optional[List[dict]] = None
+    """Multi-turn exchanges, each ``{"role": "user"|"assistant", "content": str}``.
+    Consumed by MultiTurnConsistencyMetric."""
+
+    retrieved_context: Optional[List[str]] = None
+    """Context chunks from a RAG / knowledge-base lookup.
+    Consumed by HallucinationMetric for grounding checks."""
+
+    error_summary: Optional[str] = None
+    """Human-readable description of what went wrong on a failed/incomplete run."""
+
     def to_dict(self) -> dict:
-        """Return a fully JSON-serializable dict representation."""
+        """Return a fully JSON-serializable dict representation.
+
+        Includes the optional ``conversation_history``, ``retrieved_context``,
+        and ``error_summary`` fields; they appear with ``None`` values when
+        unset, which is harmless and forward-compatible.
+        """
         return asdict(self)
 
     @classmethod
@@ -39,6 +58,10 @@ class Trajectory:
         Unknown keys are ignored. Missing optional fields fall back to
         their declared defaults; missing required fields (``task``) will
         raise ``TypeError`` from the dataclass constructor.
+
+        Old-style trajectory JSON written before the schema added
+        ``conversation_history``, ``retrieved_context``, or ``error_summary``
+        loads unchanged — those fields simply default to ``None``.
         """
         if not isinstance(data, dict):
             raise TypeError(f"from_dict expects a dict, got {type(data).__name__}")
@@ -52,7 +75,10 @@ class Trajectory:
 
         Raises:
             ValueError: if ``task`` is empty/whitespace, ``trajectory_id``
-                is not a valid UUID, or any step is missing required keys.
+                is not a valid UUID, any step is missing required keys, or
+                any of the optional schema-extension fields
+                (``conversation_history``, ``retrieved_context``,
+                ``error_summary``) is set to a value of the wrong type.
         """
         if not isinstance(self.task, str) or not self.task.strip():
             raise ValueError("Trajectory.task must be a non-empty, non-whitespace string")
@@ -75,3 +101,25 @@ class Trajectory:
                     f"steps[{i}] is missing required keys: {missing} "
                     f"(required: {list(_REQUIRED_STEP_KEYS)})"
                 )
+
+        if self.conversation_history is not None and not isinstance(
+            self.conversation_history, list
+        ):
+            raise ValueError(
+                "Trajectory.conversation_history must be a list when set, "
+                f"got {type(self.conversation_history).__name__}"
+            )
+
+        if self.retrieved_context is not None and not isinstance(
+            self.retrieved_context, list
+        ):
+            raise ValueError(
+                "Trajectory.retrieved_context must be a list when set, "
+                f"got {type(self.retrieved_context).__name__}"
+            )
+
+        if self.error_summary is not None and not isinstance(self.error_summary, str):
+            raise ValueError(
+                "Trajectory.error_summary must be a string when set, "
+                f"got {type(self.error_summary).__name__}"
+            )
