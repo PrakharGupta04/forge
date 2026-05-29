@@ -11,7 +11,9 @@ import logging
 from typing import Optional
 
 from forge.metrics.base import BaseMetric
+from forge.metrics.step_efficiency import StepEfficiencyMetric
 from forge.metrics.task_completion import TaskCompletionMetric
+from forge.metrics.tool_call_fidelity import ToolCallFidelityMetric
 
 
 logger = logging.getLogger(__name__)
@@ -22,6 +24,8 @@ class MetricEngine:
 
     ALL_METRICS: list[type[BaseMetric]] = [
         TaskCompletionMetric,
+        ToolCallFidelityMetric,
+        StepEfficiencyMetric,
     ]  # populated as additional metrics are implemented
 
     def __init__(self, metric_names: Optional[list[str]] = None) -> None:
