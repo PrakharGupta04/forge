@@ -11,6 +11,10 @@ import logging
 from typing import Optional
 
 from forge.metrics.base import BaseMetric
+from forge.metrics.consistency import MultiTurnConsistencyMetric
+from forge.metrics.hallucination import HallucinationMetric
+from forge.metrics.reasoning_coherence import ReasoningCoherenceMetric
+from forge.metrics.recovery_rate import RecoveryRateMetric
 from forge.metrics.step_efficiency import StepEfficiencyMetric
 from forge.metrics.task_completion import TaskCompletionMetric
 from forge.metrics.tool_call_fidelity import ToolCallFidelityMetric
@@ -20,13 +24,23 @@ logger = logging.getLogger(__name__)
 
 
 class MetricEngine:
-    """Run all (or a subset of) registered metrics on a trajectory."""
+    """Run all (or a subset of) registered metrics on a trajectory.
+
+    The seven-metric registry below is the canonical Forge metric suite.
+    Order is significant for the result dict's insertion order and for the
+    composite-score weighting (currently all weights are equal: the
+    arithmetic mean).
+    """
 
     ALL_METRICS: list[type[BaseMetric]] = [
         TaskCompletionMetric,
         ToolCallFidelityMetric,
         StepEfficiencyMetric,
-    ]  # populated as additional metrics are implemented
+        ReasoningCoherenceMetric,
+        HallucinationMetric,
+        RecoveryRateMetric,
+        MultiTurnConsistencyMetric,
+    ]
 
     def __init__(self, metric_names: Optional[list[str]] = None) -> None:
         self.metric_names = metric_names
