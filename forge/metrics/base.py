@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import ClassVar, Optional
 
 
 logger = logging.getLogger(__name__)
@@ -19,11 +19,20 @@ logger = logging.getLogger(__name__)
 class BaseMetric(ABC):
     """Base class every Forge metric inherits from.
 
-    Subclasses must override :attr:`name` and :meth:`score`. Every concrete
-    ``score`` implementation MUST clamp its return value with
-    ``max(0.0, min(1.0, raw_score))`` before returning, and MUST NOT swallow
-    exceptions internally — exception handling is the engine's responsibility.
+    Subclasses must define :attr:`METRIC_NAME` (a class-level string) and
+    :meth:`score`. The :attr:`name` instance property reads from
+    ``METRIC_NAME`` so the engine can read metric names directly off the
+    class — without instantiating it — during metadata operations such as
+    ``MetricEngine.available_metrics()`` and ``MetricEngine.register()``.
+
+    Every concrete ``score`` implementation MUST clamp its return value
+    with ``max(0.0, min(1.0, raw_score))`` before returning, and MUST NOT
+    swallow exceptions internally — exception handling is the engine's
+    responsibility.
     """
+
+    # Class-level identifier. Concrete metrics MUST set this.
+    METRIC_NAME: ClassVar[str]
 
     @property
     @abstractmethod

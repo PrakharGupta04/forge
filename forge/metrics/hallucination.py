@@ -57,13 +57,15 @@ _GROUNDING_CHECK_INSTRUCTIONS = (
 class HallucinationMetric(BaseMetric):
     """Score = fraction of claims in the final answer that are grounded in context."""
 
+    METRIC_NAME = "hallucination_score"
+
     def __init__(self, llm_provider: Optional[str] = None) -> None:
         super().__init__()
         self._provider = llm_provider
 
     @property
     def name(self) -> str:
-        return "hallucination_score"
+        return self.METRIC_NAME
 
     def _get_llm(self) -> LLMClient:
         if self._provider is not None:

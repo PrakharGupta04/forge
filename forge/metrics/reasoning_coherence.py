@@ -21,6 +21,7 @@ from forge.metrics.base import BaseMetric
 class ReasoningCoherenceMetric(BaseMetric):
     """Mean pairwise cosine similarity over consecutive LLM step embeddings."""
 
+    METRIC_NAME = "reasoning_coherence"
     _MODEL_NAME = "BAAI/bge-small-en-v1.5"
 
     def __init__(self) -> None:
@@ -38,7 +39,7 @@ class ReasoningCoherenceMetric(BaseMetric):
 
     @property
     def name(self) -> str:
-        return "reasoning_coherence"
+        return self.METRIC_NAME
 
     def score(self, trajectory: dict) -> float:
         texts: list[str] = []

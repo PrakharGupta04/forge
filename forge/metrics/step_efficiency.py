@@ -18,9 +18,11 @@ from forge.metrics.base import BaseMetric
 class StepEfficiencyMetric(BaseMetric):
     """Score = minimum_steps / actual_steps (capped at 1.0, clamped to [0, 1])."""
 
+    METRIC_NAME = "step_efficiency"
+
     @property
     def name(self) -> str:
-        return "step_efficiency"
+        return self.METRIC_NAME
 
     def score(self, trajectory: dict) -> float:
         steps = trajectory.get("steps", [])

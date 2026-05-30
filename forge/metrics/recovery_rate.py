@@ -38,9 +38,11 @@ _INPUT_DIFFERENCE_THRESHOLD = 0.2
 class RecoveryRateMetric(BaseMetric):
     """recoveries / failures, with empty-failures collapsing to 1.0."""
 
+    METRIC_NAME = "recovery_rate"
+
     @property
     def name(self) -> str:
-        return "recovery_rate"
+        return self.METRIC_NAME
 
     def score(self, trajectory: dict) -> float:
         steps = trajectory.get("steps", [])

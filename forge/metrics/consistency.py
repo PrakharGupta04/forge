@@ -55,13 +55,15 @@ _CONTRADICTION_CHECK_INSTRUCTIONS = (
 class MultiTurnConsistencyMetric(BaseMetric):
     """0.0 if any later turn contradicts the first; 1.0 if none do; 0.5 if unknown."""
 
+    METRIC_NAME = "multi_turn_consistency"
+
     def __init__(self, llm_provider: Optional[str] = None) -> None:
         super().__init__()
         self._provider = llm_provider
 
     @property
     def name(self) -> str:
-        return "multi_turn_consistency"
+        return self.METRIC_NAME
 
     def _get_llm(self) -> LLMClient:
         if self._provider is not None:

@@ -35,13 +35,15 @@ _EVALUATOR_INSTRUCTIONS = (
 class TaskCompletionMetric(BaseMetric):
     """Grade an agent's final answer against the task (and optional ground truth)."""
 
+    METRIC_NAME = "task_completion"
+
     def __init__(self, llm_provider: Optional[str] = None) -> None:
         super().__init__()
         self._provider = llm_provider
 
     @property
     def name(self) -> str:
-        return "task_completion"
+        return self.METRIC_NAME
 
     def score(self, trajectory: dict) -> float:
         task = trajectory.get("task", "")

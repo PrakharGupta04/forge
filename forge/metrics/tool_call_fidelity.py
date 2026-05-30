@@ -25,9 +25,11 @@ from forge.metrics.base import BaseMetric
 class ToolCallFidelityMetric(BaseMetric):
     """Score the agent's tool-call sequence against a golden reference."""
 
+    METRIC_NAME = "tool_call_fidelity"
+
     @property
     def name(self) -> str:
-        return "tool_call_fidelity"
+        return self.METRIC_NAME
 
     def score(self, trajectory: dict) -> float:
         actual_calls = [

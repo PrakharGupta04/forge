@@ -40,3 +40,16 @@ redis_data/
 
 # Cursor
 .cursor/
+
+# SQLite
+*.sqlite3
+*.db
+
+# Python packaging
+*.whl
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment examples remain tracked
+!.env.example

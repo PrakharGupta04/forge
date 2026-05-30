@@ -89,14 +89,23 @@ class MetricEngine:
         return results
 
     def available_metrics(self) -> list[str]:
-        """Return the names of every registered metric (regardless of filter)."""
-        return [cls().name for cls in self.ALL_METRICS]
+        """Return the names of every registered metric (regardless of filter).
+
+        Reads ``cls.METRIC_NAME`` directly so this metadata operation never
+        instantiates a metric — heavyweight ``__init__`` work (e.g. the
+        SentenceTransformer load in ``ReasoningCoherenceMetric``) stays off
+        the name-lookup path.
+        """
+        return [cls.METRIC_NAME for cls in self.ALL_METRICS]
 
     @classmethod
     def register(cls, metric_class: type[BaseMetric]) -> None:
-        """Register ``metric_class`` if no existing metric shares its name."""
-        new_name = metric_class().name
-        existing_names = {existing().name for existing in cls.ALL_METRICS}
+        """Register ``metric_class`` if no existing metric shares its name.
+
+        Reads ``METRIC_NAME`` off the class — no instantiation here either.
+        """
+        new_name = metric_class.METRIC_NAME
+        existing_names = {existing.METRIC_NAME for existing in cls.ALL_METRICS}
         if new_name not in existing_names:
             cls.ALL_METRICS.append(metric_class)
 
@@ -105,8 +114,10 @@ class MetricEngine:
 
         If ``metric_names`` is ``None``, returns every registered metric.
         Unknown names are silently ignored (the registry is authoritative).
+        Name lookup uses ``cls.METRIC_NAME`` so filtering never triggers a
+        metric's ``__init__``.
         """
         if self.metric_names is None:
             return list(self.ALL_METRICS)
         wanted = set(self.metric_names)
-        return [cls for cls in self.ALL_METRICS if cls().name in wanted]
+        return [cls for cls in self.ALL_METRICS if cls.METRIC_NAME in wanted]
