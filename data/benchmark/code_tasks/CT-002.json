@@ -1,0 +1,15 @@
+{
+  "task_id": "CT-002",
+  "domain": "code_tasks",
+  "task": "What is the output of this Python code?\n```\nprint([1, 2, 3, 4][::-1])\n```",
+  "ground_truth": "[4, 3, 2, 1]",
+  "required_tools": ["code_reasoning"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "code_reasoning", "tool_input": "slice [::-1] reverses the list"}
+    ]
+  },
+  "difficulty": "easy",
+  "notes": "Slice with negative step reverses the list, producing [4, 3, 2, 1]."
+}

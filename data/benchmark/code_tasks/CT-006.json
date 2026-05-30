@@ -1,0 +1,15 @@
+{
+  "task_id": "CT-006",
+  "domain": "code_tasks",
+  "task": "What is the output of this Python code?\n```\nx = [1, 2, 3]\ny = x\ny.append(4)\nprint(x)\n```",
+  "ground_truth": "[1, 2, 3, 4]",
+  "required_tools": ["code_reasoning"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "code_reasoning", "tool_input": "y = x creates an alias to the same list, so mutating y mutates x"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Tests reference aliasing: y is a reference to the same list as x, so the append visible through x."
+}

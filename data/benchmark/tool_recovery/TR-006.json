@@ -1,0 +1,16 @@
+{
+  "task_id": "TR-006",
+  "domain": "tool_recovery",
+  "task": "Use the calculator to compute 25 factorial (25!). Note: the first attempt with the input '25!' is expected to fail because the postfix factorial operator is not standard; reformulate using a function call such as 'factorial(25)'.",
+  "ground_truth": "15511210043330985984000000",
+  "required_tools": ["calculator"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "25!"},
+      {"tool_name": "calculator", "tool_input": "factorial(25)"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Expected failure: postfix '!' is not standard input for most calculator tools. Expected recovery: switch to a named factorial function. Tests syntax adaptation."
+}

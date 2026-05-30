@@ -1,0 +1,16 @@
+{
+  "task_id": "FR-009",
+  "domain": "factual_research",
+  "task": "In what year did the city that hosted the first modern Olympic Games (1896) become the capital of its country?",
+  "ground_truth": "1834",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "city that hosted the first modern Olympic Games 1896"},
+      {"tool_name": "web_search", "tool_input": "year Athens became the capital of Greece"}
+    ]
+  },
+  "difficulty": "hard",
+  "notes": "Multi-hop: Athens hosted the 1896 Olympics; it became the capital of modern Greece in 1834, replacing Nafplio. Tests chained historical lookup with potential temptation to return the wrong year (1896)."
+}

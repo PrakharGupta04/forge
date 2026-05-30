@@ -1,0 +1,15 @@
+{
+  "task_id": "DA-004",
+  "domain": "data_analysis",
+  "task": "Given the sequence [10, 12, 15, 14, 18, 20, 24], compute the percentage change from the first value to the last value.",
+  "ground_truth": "140%",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "(24 - 10) / 10 * 100"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Percentage change formula (new - old) / old * 100. From 10 to 24 is +140%."
+}

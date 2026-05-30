@@ -1,0 +1,16 @@
+{
+  "task_id": "FR-007",
+  "domain": "factual_research",
+  "task": "In what year was the museum that holds the original Mona Lisa first opened to the public?",
+  "ground_truth": "1793",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "museum that holds the Mona Lisa"},
+      {"tool_name": "web_search", "tool_input": "Louvre Museum opened to the public year"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Multi-hop: the Mona Lisa hangs in the Louvre, which opened as a public museum on 10 August 1793. Tests distinguishing the building's medieval origins from the museum's public opening."
+}

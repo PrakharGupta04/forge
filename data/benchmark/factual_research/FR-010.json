@@ -1,0 +1,16 @@
+{
+  "task_id": "FR-010",
+  "domain": "factual_research",
+  "task": "In what year was the professional society that awards the Turing Award founded?",
+  "ground_truth": "1947",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "professional society that awards the Turing Award"},
+      {"tool_name": "web_search", "tool_input": "Association for Computing Machinery ACM founding year"}
+    ]
+  },
+  "difficulty": "hard",
+  "notes": "Multi-hop: the Turing Award is given by the ACM (Association for Computing Machinery), founded September 15, 1947."
+}

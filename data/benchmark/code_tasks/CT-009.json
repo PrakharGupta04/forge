@@ -1,0 +1,15 @@
+{
+  "task_id": "CT-009",
+  "domain": "code_tasks",
+  "task": "What is the output of this Python code?\n```\ndef f(n):\n    return 1 if n <= 1 else f(n - 1) + f(n - 2)\nprint(f(10))\n```",
+  "ground_truth": "89",
+  "required_tools": ["code_reasoning"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "code_reasoning", "tool_input": "Fibonacci with f(0)=f(1)=1; sequence 1,1,2,3,5,8,13,21,34,55,89 -> f(10)=89"}
+    ]
+  },
+  "difficulty": "hard",
+  "notes": "Fibonacci with base case f(0)=f(1)=1: f(2)=2, f(3)=3, f(4)=5, f(5)=8, f(6)=13, f(7)=21, f(8)=34, f(9)=55, f(10)=89."
+}

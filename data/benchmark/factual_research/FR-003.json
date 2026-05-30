@@ -1,0 +1,16 @@
+{
+  "task_id": "FR-003",
+  "domain": "factual_research",
+  "task": "What is the name of the river that flows through the birthplace of William Shakespeare?",
+  "ground_truth": "River Avon",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "birthplace of William Shakespeare"},
+      {"tool_name": "web_search", "tool_input": "river flowing through Stratford-upon-Avon"}
+    ]
+  },
+  "difficulty": "easy",
+  "notes": "Two-hop research: Shakespeare was born in Stratford-upon-Avon; the river through it is the River Avon."
+}

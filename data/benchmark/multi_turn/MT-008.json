@@ -1,0 +1,23 @@
+{
+  "task_id": "MT-008",
+  "domain": "multi_turn",
+  "task": "The user mentions a city in passing (Reykjavik), asks an unrelated math question, then asks which country contains the city mentioned earlier. The agent must remember the city across turns and identify its country.",
+  "ground_truth": "Iceland",
+  "required_tools": ["respond"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "respond", "tool_input": "Iceland"}
+    ]
+  },
+  "conversation_history": [
+    {"role": "user", "content": "I'm planning a trip to Reykjavik."},
+    {"role": "assistant", "content": "Reykjavik — an interesting choice!"},
+    {"role": "user", "content": "What is 15 times 4?"},
+    {"role": "assistant", "content": "60."},
+    {"role": "user", "content": "What country is the city I mentioned earlier in?"},
+    {"role": "assistant", "content": "Iceland."}
+  ],
+  "difficulty": "hard",
+  "notes": "Tests passive memory (city mentioned in passing) and indirect co-reference ('the city I mentioned earlier')."
+}

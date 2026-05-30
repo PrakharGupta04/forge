@@ -1,0 +1,23 @@
+{
+  "task_id": "MT-010",
+  "domain": "multi_turn",
+  "task": "The user asks the agent for two intermediate results (the square root of 64, then the cube of 5) across separate turns, then asks for the sum of the two answers the agent just gave. The agent must remember its own prior answers and combine them.",
+  "ground_truth": "133",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "8 + 125"}
+    ]
+  },
+  "conversation_history": [
+    {"role": "user", "content": "What is the square root of 64?"},
+    {"role": "assistant", "content": "8."},
+    {"role": "user", "content": "What is the cube of 5?"},
+    {"role": "assistant", "content": "125."},
+    {"role": "user", "content": "What is the sum of the two answers you just gave me?"},
+    {"role": "assistant", "content": "133."}
+  ],
+  "difficulty": "hard",
+  "notes": "Tests memory of the agent's own outputs across turns and the ability to combine multiple prior answers."
+}

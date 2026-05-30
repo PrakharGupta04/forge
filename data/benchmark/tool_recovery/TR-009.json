@@ -1,0 +1,16 @@
+{
+  "task_id": "TR-009",
+  "domain": "tool_recovery",
+  "task": "Find the specific year for which Albert Einstein was awarded the Nobel Prize in Physics. Note: a broad first search may return general biographical material; refine the query to find the award year (he was awarded the 1921 Prize, though he received it in 1922).",
+  "ground_truth": "1921",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "albert einstein nobel prize"},
+      {"tool_name": "web_search", "tool_input": "Albert Einstein Nobel Prize in Physics awarded year 1921"}
+    ]
+  },
+  "difficulty": "hard",
+  "notes": "Expected failure: a broad search returns biographical pages without highlighting the specific award year. Expected recovery: narrow the query to the year-of-award. Tests precision in factual research."
+}

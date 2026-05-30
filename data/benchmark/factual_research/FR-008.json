@@ -1,0 +1,16 @@
+{
+  "task_id": "FR-008",
+  "domain": "factual_research",
+  "task": "In what year was the publishing house that issued the first edition of 'Alice's Adventures in Wonderland' founded?",
+  "ground_truth": "1843",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "publisher of first edition Alice's Adventures in Wonderland 1865"},
+      {"tool_name": "web_search", "tool_input": "Macmillan Publishers founding year"}
+    ]
+  },
+  "difficulty": "hard",
+  "notes": "Multi-hop: the 1865 first edition was published by Macmillan, which itself was founded in 1843. Requires distinguishing the book's publication year (1865) from the publisher's founding year (1843)."
+}

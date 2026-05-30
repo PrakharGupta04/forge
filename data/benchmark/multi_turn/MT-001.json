@@ -1,0 +1,23 @@
+{
+  "task_id": "MT-001",
+  "domain": "multi_turn",
+  "task": "The user reveals their birth year, asks an unrelated math question in the middle, then asks the agent to compute their age assuming the current year is 2024. The agent must remember the birth year across turns.",
+  "ground_truth": "34",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "2024 - 1990"}
+    ]
+  },
+  "conversation_history": [
+    {"role": "user", "content": "I was born in 1990."},
+    {"role": "assistant", "content": "Got it, I will remember that you were born in 1990."},
+    {"role": "user", "content": "What is 5 plus 7?"},
+    {"role": "assistant", "content": "12."},
+    {"role": "user", "content": "If the current year were 2024, how old would I be?"},
+    {"role": "assistant", "content": "34 years old."}
+  ],
+  "difficulty": "easy",
+  "notes": "Tests memory of a numeric fact (birth year) across an unrelated intermediate turn, then use of that fact in a downstream subtraction."
+}

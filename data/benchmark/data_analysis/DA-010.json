@@ -1,0 +1,15 @@
+{
+  "task_id": "DA-010",
+  "domain": "data_analysis",
+  "task": "Given the 2x2 matrix [[1, 2], [3, 4]], compute the determinant.",
+  "ground_truth": "-2",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "1*4 - 2*3"}
+    ]
+  },
+  "difficulty": "hard",
+  "notes": "Determinant of [[a,b],[c,d]] = ad - bc = 1*4 - 2*3 = -2."
+}

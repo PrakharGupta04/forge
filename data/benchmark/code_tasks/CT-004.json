@@ -1,0 +1,15 @@
+{
+  "task_id": "CT-004",
+  "domain": "code_tasks",
+  "task": "What is the output of this Python code?\n```\ndef f(x, lst=[]):\n    lst.append(x)\n    return lst\n\nprint(f(1))\nprint(f(2))\n```",
+  "ground_truth": "[1] then [1, 2]",
+  "required_tools": ["code_reasoning"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "code_reasoning", "tool_input": "mutable default argument [] is shared across calls; second call sees [1] and appends 2"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Classic Python mutable default-argument bug: the default list is shared between calls, so the second call sees [1] and appends 2."
+}

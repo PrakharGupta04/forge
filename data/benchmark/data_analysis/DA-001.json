@@ -1,0 +1,15 @@
+{
+  "task_id": "DA-001",
+  "domain": "data_analysis",
+  "task": "Given the numbers [4, 8, 15, 16, 23, 42], compute the arithmetic mean.",
+  "ground_truth": "18",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "(4 + 8 + 15 + 16 + 23 + 42) / 6"}
+    ]
+  },
+  "difficulty": "easy",
+  "notes": "Basic arithmetic mean over six integers. Sum = 108, count = 6, mean = 18."
+}

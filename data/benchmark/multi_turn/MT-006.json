@@ -1,0 +1,23 @@
+{
+  "task_id": "MT-006",
+  "domain": "multi_turn",
+  "task": "The user assigns a value to a variable (X = 7), asks an unrelated math question, then asks the agent to compute X times 6. The agent must remember the variable binding and apply it.",
+  "ground_truth": "42",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "7 * 6"}
+    ]
+  },
+  "conversation_history": [
+    {"role": "user", "content": "Let X = 7."},
+    {"role": "assistant", "content": "Got it, X = 7."},
+    {"role": "user", "content": "What is 12 minus 4?"},
+    {"role": "assistant", "content": "8."},
+    {"role": "user", "content": "What is X times 6?"},
+    {"role": "assistant", "content": "42."}
+  ],
+  "difficulty": "medium",
+  "notes": "Tests variable binding memory: agent must apply the earlier-bound value of X in the final calculation."
+}

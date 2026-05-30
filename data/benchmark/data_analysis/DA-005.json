@@ -1,0 +1,16 @@
+{
+  "task_id": "DA-005",
+  "domain": "data_analysis",
+  "task": "Given the numbers [2, 4, 4, 4, 5, 5, 7, 9], compute the population standard deviation.",
+  "ground_truth": "2",
+  "required_tools": ["calculator"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "(2 + 4 + 4 + 4 + 5 + 5 + 7 + 9) / 8"},
+      {"tool_name": "calculator", "tool_input": "sqrt(((2-5)^2 + 3*(4-5)^2 + 2*(5-5)^2 + (7-5)^2 + (9-5)^2) / 8)"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Population (not sample) standard deviation: mean = 5, variance = 32/8 = 4, sigma = 2."
+}

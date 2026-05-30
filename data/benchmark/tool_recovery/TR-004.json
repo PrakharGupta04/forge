@@ -1,0 +1,16 @@
+{
+  "task_id": "TR-004",
+  "domain": "tool_recovery",
+  "task": "Use the calculator to compute the square root of 144. Note: the first attempt with the input 'sqrt 144' is expected to fail with a parse error; reformat the input as 'sqrt(144)'.",
+  "ground_truth": "12",
+  "required_tools": ["calculator"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "sqrt 144"},
+      {"tool_name": "calculator", "tool_input": "sqrt(144)"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Expected failure: 'sqrt 144' without parentheses is a syntax error in most calculator tools. Expected recovery: reformulate with proper function-call syntax."
+}

@@ -1,0 +1,15 @@
+{
+  "task_id": "DA-007",
+  "domain": "data_analysis",
+  "task": "Given the data points (1, 4), (2, 6), (3, 8), (4, 10), compute the slope of the best-fit straight line.",
+  "ground_truth": "2",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "ordinary least-squares slope for (1,4),(2,6),(3,8),(4,10)"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "The points lie exactly on y = 2x + 2, so the best-fit slope is 2 (the data is perfectly linear)."
+}

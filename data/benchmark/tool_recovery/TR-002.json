@@ -1,0 +1,16 @@
+{
+  "task_id": "TR-002",
+  "domain": "tool_recovery",
+  "task": "Find the year that the Java programming language was first publicly released. Note: searching for 'java' alone is expected to return results about coffee, the Indonesian island, and unrelated topics; refine the query to target the programming language.",
+  "ground_truth": "1995",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "java"},
+      {"tool_name": "web_search", "tool_input": "Java programming language first public release year"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Expected failure: 'java' is ambiguous (language vs. island vs. coffee). Expected recovery: add the 'programming language' qualifier. Tests disambiguation."
+}

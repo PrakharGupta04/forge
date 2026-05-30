@@ -1,0 +1,16 @@
+{
+  "task_id": "FR-006",
+  "domain": "factual_research",
+  "task": "In what year was the university where Charles Darwin began his medical studies founded?",
+  "ground_truth": "1583",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "university where Charles Darwin studied medicine"},
+      {"tool_name": "web_search", "tool_input": "University of Edinburgh founding year"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Multi-hop: Darwin enrolled in medicine at the University of Edinburgh in 1825; Edinburgh was founded in 1583 by royal charter. Distinguishes from his later Cambridge years."
+}

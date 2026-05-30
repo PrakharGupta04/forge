@@ -1,0 +1,16 @@
+{
+  "task_id": "TR-007",
+  "domain": "tool_recovery",
+  "task": "Use the calculator to compute the value of the definite integral of x^2 from 0 to 3. Note: if the calculator does not support symbolic integration, fall back to the analytical solution (integral of x^2 dx = x^3/3) and compute (3^3/3) - (0^3/3) directly.",
+  "ground_truth": "9",
+  "required_tools": ["calculator"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "integrate x^2 from 0 to 3"},
+      {"tool_name": "calculator", "tool_input": "(3^3)/3 - (0^3)/3"}
+    ]
+  },
+  "difficulty": "hard",
+  "notes": "Expected failure: most calculator tools do not support symbolic integration. Expected recovery: apply the analytical formula and compute the numeric difference. Tests mathematical reasoning under tool limitations."
+}

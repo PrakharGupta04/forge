@@ -1,0 +1,23 @@
+{
+  "task_id": "MT-004",
+  "domain": "multi_turn",
+  "task": "The user builds a list across turns by initialising it with three items and then appending two more, and finally asks how many items the list contains. The agent must track the list's contents across turns.",
+  "ground_truth": "5",
+  "required_tools": ["respond"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "respond", "tool_input": "There are 5 items in the list."}
+    ]
+  },
+  "conversation_history": [
+    {"role": "user", "content": "Start a list with: apple, banana, cherry."},
+    {"role": "assistant", "content": "List started: apple, banana, cherry."},
+    {"role": "user", "content": "Add date and elderberry to the list."},
+    {"role": "assistant", "content": "List is now: apple, banana, cherry, date, elderberry."},
+    {"role": "user", "content": "How many items are in the list now?"},
+    {"role": "assistant", "content": "5 items."}
+  ],
+  "difficulty": "medium",
+  "notes": "Tests stateful list-building across turns followed by a final cardinality query."
+}

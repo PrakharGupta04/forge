@@ -1,0 +1,15 @@
+{
+  "task_id": "DA-006",
+  "domain": "data_analysis",
+  "task": "Given the test scores [78, 82, 95, 67, 88, 91, 73, 85], compute the range (highest score minus lowest score).",
+  "ground_truth": "28",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "95 - 67"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Range = max - min. Max is 95, min is 67; range = 28."
+}

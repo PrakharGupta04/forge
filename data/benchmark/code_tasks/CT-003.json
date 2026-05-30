@@ -1,0 +1,15 @@
+{
+  "task_id": "CT-003",
+  "domain": "code_tasks",
+  "task": "What is the worst-case time complexity in Big-O notation of this Python function?\n```\ndef f(arr):\n    for x in arr:\n        for y in arr:\n            print(x, y)\n```",
+  "ground_truth": "O(n^2)",
+  "required_tools": ["code_reasoning"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "code_reasoning", "tool_input": "two nested loops each over arr (size n) -> n*n iterations"}
+    ]
+  },
+  "difficulty": "easy",
+  "notes": "Two nested loops both iterating over an array of size n -> O(n^2) total work."
+}

@@ -1,0 +1,16 @@
+{
+  "task_id": "TR-001",
+  "domain": "tool_recovery",
+  "task": "Find the orbital period of the planet Mercury, in Earth days. Note: searching for 'mercury' alone is expected to return ambiguous results spanning the chemical element, the Roman god, and several companies; you must refine the query to specifically target the planet.",
+  "ground_truth": "88 days",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "mercury"},
+      {"tool_name": "web_search", "tool_input": "planet Mercury orbital period in Earth days"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Expected failure: the bare term 'mercury' is highly ambiguous (element, deity, company). Expected recovery: re-issue the search with the disambiguating phrase 'planet Mercury orbital period'. Tests query refinement under term ambiguity."
+}

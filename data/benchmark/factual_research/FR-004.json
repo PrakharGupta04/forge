@@ -1,0 +1,16 @@
+{
+  "task_id": "FR-004",
+  "domain": "factual_research",
+  "task": "In what year was the first Nobel Prize awarded in the category in which Marie Curie won her first Nobel Prize?",
+  "ground_truth": "1901",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "Marie Curie first Nobel Prize category"},
+      {"tool_name": "web_search", "tool_input": "first Nobel Prize in Physics year"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Multi-hop: Curie's first Nobel was in Physics (1903); the first Physics Nobel was awarded in 1901 (the inaugural year of every Nobel category)."
+}

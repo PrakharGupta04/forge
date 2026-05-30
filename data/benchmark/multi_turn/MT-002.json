@@ -1,0 +1,23 @@
+{
+  "task_id": "MT-002",
+  "domain": "multi_turn",
+  "task": "The user asks the agent to remember a specific number, performs an unrelated lookup, then asks for the remembered number doubled.",
+  "ground_truth": "34",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "17 * 2"}
+    ]
+  },
+  "conversation_history": [
+    {"role": "user", "content": "Please remember the number 17 for later."},
+    {"role": "assistant", "content": "Got it, I will remember 17."},
+    {"role": "user", "content": "What is the capital of France?"},
+    {"role": "assistant", "content": "Paris."},
+    {"role": "user", "content": "What is the number I asked you to remember, doubled?"},
+    {"role": "assistant", "content": "34."}
+  ],
+  "difficulty": "easy",
+  "notes": "Straightforward memory test with one intervening unrelated turn; final answer requires arithmetic on the remembered value."
+}

@@ -1,0 +1,16 @@
+{
+  "task_id": "FR-002",
+  "domain": "factual_research",
+  "task": "What is the birth year of the author of 'Pride and Prejudice'?",
+  "ground_truth": "1775",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "author of Pride and Prejudice"},
+      {"tool_name": "web_search", "tool_input": "Jane Austen birth year"}
+    ]
+  },
+  "difficulty": "easy",
+  "notes": "Two-hop research: identify the author (Jane Austen), then her birth year (1775). Long-dead-author birth year never changes."
+}

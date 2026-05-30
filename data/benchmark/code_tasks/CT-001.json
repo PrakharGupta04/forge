@@ -1,0 +1,15 @@
+{
+  "task_id": "CT-001",
+  "domain": "code_tasks",
+  "task": "What is the output of this Python code?\n```\nprint(len('hello world'))\n```",
+  "ground_truth": "11",
+  "required_tools": ["code_reasoning"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "code_reasoning", "tool_input": "len('hello world') counts every character including the space"}
+    ]
+  },
+  "difficulty": "easy",
+  "notes": "Tests that strings include whitespace: 'hello' (5) + ' ' (1) + 'world' (5) = 11."
+}

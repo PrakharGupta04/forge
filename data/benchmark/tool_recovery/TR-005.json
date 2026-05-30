@@ -1,0 +1,16 @@
+{
+  "task_id": "TR-005",
+  "domain": "tool_recovery",
+  "task": "Find the year that the Berlin Wall fell. Note: searching for 'wall' alone is expected to return unrelated results (films, climbing equipment, etc.); refine the query to specifically target the Berlin Wall.",
+  "ground_truth": "1989",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "wall"},
+      {"tool_name": "web_search", "tool_input": "Berlin Wall fall year"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Expected failure: 'wall' is far too generic. Expected recovery: add 'Berlin' and 'fall' as qualifiers. Tests query specificity."
+}

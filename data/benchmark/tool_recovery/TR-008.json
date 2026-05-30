@@ -1,0 +1,16 @@
+{
+  "task_id": "TR-008",
+  "domain": "tool_recovery",
+  "task": "Find the year that George Orwell's novel '1984' was first published. Note: searching for '1984' alone is expected to return overwhelming results about the calendar year itself or events from that year; refine the query to specifically target the novel.",
+  "ground_truth": "1949",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "1984"},
+      {"tool_name": "web_search", "tool_input": "George Orwell novel 1984 first publication year"}
+    ]
+  },
+  "difficulty": "hard",
+  "notes": "Expected failure: '1984' as a search term returns dominant calendar-year results. Expected recovery: add author and 'novel/book' qualifiers. Tests separating a numeric year from a same-named work."
+}

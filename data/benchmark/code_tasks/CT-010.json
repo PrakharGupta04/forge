@@ -1,0 +1,15 @@
+{
+  "task_id": "CT-010",
+  "domain": "code_tasks",
+  "task": "What is the output of this Python code?\n```\ns = 'abcdef'\nprint(s[1:5:2])\n```",
+  "ground_truth": "bd",
+  "required_tools": ["code_reasoning"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "code_reasoning", "tool_input": "slice s[1:5:2] yields indices 1 and 3 of 'abcdef' -> 'bd'"}
+    ]
+  },
+  "difficulty": "hard",
+  "notes": "Slice [start:stop:step]: with start=1, stop=5, step=2, the indices visited are 1 and 3, giving characters 'b' and 'd'."
+}

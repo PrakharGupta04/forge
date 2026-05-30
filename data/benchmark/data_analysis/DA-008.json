@@ -1,0 +1,16 @@
+{
+  "task_id": "DA-008",
+  "domain": "data_analysis",
+  "task": "A factory produces 100 widgets per day at $12 per widget. The defect rate is 5%, and each defect costs $15 to remediate. Compute the daily net revenue in dollars.",
+  "ground_truth": "$1125",
+  "required_tools": ["calculator"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "100 * 12"},
+      {"tool_name": "calculator", "tool_input": "1200 - (100 * 0.05 * 15)"}
+    ]
+  },
+  "difficulty": "hard",
+  "notes": "Gross revenue $1200/day minus defect remediation (5 defects x $15 = $75) = $1125 net daily revenue."
+}

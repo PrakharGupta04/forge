@@ -1,0 +1,16 @@
+{
+  "task_id": "FR-001",
+  "domain": "factual_research",
+  "task": "In what year was the company co-founded by Bill Gates and Paul Allen established?",
+  "ground_truth": "1975",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "company co-founded by Bill Gates and Paul Allen"},
+      {"tool_name": "web_search", "tool_input": "Microsoft founding year"}
+    ]
+  },
+  "difficulty": "easy",
+  "notes": "Two-hop research: identify the company (Microsoft), then look up its founding year (1975). Historically stable fact suitable for a research baseline."
+}

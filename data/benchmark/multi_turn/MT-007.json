@@ -1,0 +1,23 @@
+{
+  "task_id": "MT-007",
+  "domain": "multi_turn",
+  "task": "The user provides a list of friends with their ages (Alice 24, Bob 31, Carol 28, Dave 35), asks an unrelated math question, then asks which friend is the oldest. The agent must remember the structured list and identify the maximum-age entry.",
+  "ground_truth": "Dave",
+  "required_tools": ["respond"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "respond", "tool_input": "Dave is the oldest at 35."}
+    ]
+  },
+  "conversation_history": [
+    {"role": "user", "content": "My friends are: Alice (24), Bob (31), Carol (28), Dave (35)."},
+    {"role": "assistant", "content": "Got it, I will remember your friends and their ages."},
+    {"role": "user", "content": "What is 10 squared?"},
+    {"role": "assistant", "content": "100."},
+    {"role": "user", "content": "Among my friends, who is the oldest?"},
+    {"role": "assistant", "content": "Dave, at 35."}
+  ],
+  "difficulty": "medium",
+  "notes": "Tests memory of a small structured dataset across an intervening unrelated turn, plus a max-by-age comparison query."
+}

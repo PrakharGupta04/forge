@@ -1,0 +1,15 @@
+{
+  "task_id": "DA-002",
+  "domain": "data_analysis",
+  "task": "Given the sorted numbers [3, 7, 8, 12, 15, 21, 25], compute the median.",
+  "ground_truth": "12",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "middle element of sorted [3, 7, 8, 12, 15, 21, 25]"}
+    ]
+  },
+  "difficulty": "easy",
+  "notes": "Median of an odd-length sorted list: the 4th of 7 values is 12."
+}

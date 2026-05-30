@@ -1,0 +1,15 @@
+{
+  "task_id": "CT-007",
+  "domain": "code_tasks",
+  "task": "What is the value of `result` after this Python code runs?\n```\nresult = 0\nfor i in range(1, 11):\n    if i % 2 == 0:\n        result += i\n```",
+  "ground_truth": "30",
+  "required_tools": ["code_reasoning"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "code_reasoning", "tool_input": "sum of even integers 2 + 4 + 6 + 8 + 10"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Sums even numbers in 1..10 inclusive: 2 + 4 + 6 + 8 + 10 = 30."
+}

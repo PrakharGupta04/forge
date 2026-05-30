@@ -1,0 +1,15 @@
+{
+  "task_id": "DA-009",
+  "domain": "data_analysis",
+  "task": "A bag contains 6 red, 4 blue, and 2 green marbles. If you draw 2 marbles without replacement, compute the probability that both are red. Express the answer as a simplified fraction.",
+  "ground_truth": "5/22",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "(6/12) * (5/11)"}
+    ]
+  },
+  "difficulty": "hard",
+  "notes": "Conditional probability without replacement: 6/12 * 5/11 = 30/132 = 5/22."
+}

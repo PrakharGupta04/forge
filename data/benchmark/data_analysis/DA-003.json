@@ -1,0 +1,15 @@
+{
+  "task_id": "DA-003",
+  "domain": "data_analysis",
+  "task": "A store sells: 5 widgets at $3 each, 2 gizmos at $7 each, and 4 gadgets at $10 each. Compute the total revenue in dollars.",
+  "ground_truth": "$69",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "5*3 + 2*7 + 4*10"}
+    ]
+  },
+  "difficulty": "easy",
+  "notes": "Sum of price x quantity across three product lines: 15 + 14 + 40 = 69."
+}

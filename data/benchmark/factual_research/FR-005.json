@@ -1,0 +1,16 @@
+{
+  "task_id": "FR-005",
+  "domain": "factual_research",
+  "task": "What is the birth year of the original creator of the Java programming language?",
+  "ground_truth": "1955",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "original creator of Java programming language"},
+      {"tool_name": "web_search", "tool_input": "James Gosling birth year"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Multi-hop: Java was created by James Gosling (born 1955). Tests disambiguation between Java the language and Java the island or coffee."
+}

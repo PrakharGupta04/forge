@@ -1,0 +1,25 @@
+{
+  "task_id": "MT-005",
+  "domain": "multi_turn",
+  "task": "The user states a starting budget of $100, then reports two separate expenses across turns ($40 on groceries, $25 on a book), then asks how much remains. The agent must subtract each expense as reported and report the running balance at the end.",
+  "ground_truth": "$35",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "100 - 40 - 25"}
+    ]
+  },
+  "conversation_history": [
+    {"role": "user", "content": "I have $100 in my budget."},
+    {"role": "assistant", "content": "Got it, your starting budget is $100."},
+    {"role": "user", "content": "I just spent $40 on groceries."},
+    {"role": "assistant", "content": "OK, you have $60 remaining."},
+    {"role": "user", "content": "Then I spent $25 on a book."},
+    {"role": "assistant", "content": "OK, you have $35 remaining."},
+    {"role": "user", "content": "How much do I have remaining in my budget?"},
+    {"role": "assistant", "content": "$35."}
+  ],
+  "difficulty": "medium",
+  "notes": "Tests stateful numeric tracking (budget) across four turns and a final balance query."
+}

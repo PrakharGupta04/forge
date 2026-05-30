@@ -1,0 +1,25 @@
+{
+  "task_id": "MT-003",
+  "domain": "multi_turn",
+  "task": "The user describes their pets across three separate turns (3 dogs, 2 cats, 1 turtle), then asks for the total number of pets. The agent must accumulate facts across turns and aggregate them on demand.",
+  "ground_truth": "6",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "3 + 2 + 1"}
+    ]
+  },
+  "conversation_history": [
+    {"role": "user", "content": "I have 3 dogs."},
+    {"role": "assistant", "content": "Got it, you have 3 dogs."},
+    {"role": "user", "content": "I also have 2 cats."},
+    {"role": "assistant", "content": "Noted, 2 cats too."},
+    {"role": "user", "content": "And I have 1 turtle."},
+    {"role": "assistant", "content": "And 1 turtle. Got it."},
+    {"role": "user", "content": "How many pets do I have in total?"},
+    {"role": "assistant", "content": "6 pets in total."}
+  ],
+  "difficulty": "easy",
+  "notes": "Tests accumulating three separately-stated facts across three turns into a final aggregation."
+}

@@ -1,0 +1,16 @@
+{
+  "task_id": "TR-010",
+  "domain": "tool_recovery",
+  "task": "Find the year that Mahatma Gandhi was assassinated. Note: searching for 'gandhi' alone is expected to return results about multiple members of the Gandhi political family (Indira, Rajiv, Sonia, Rahul); refine the query to specifically target Mahatma Gandhi.",
+  "ground_truth": "1948",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "gandhi"},
+      {"tool_name": "web_search", "tool_input": "Mahatma Gandhi assassination year"}
+    ]
+  },
+  "difficulty": "hard",
+  "notes": "Expected failure: 'gandhi' is ambiguous across Indian political figures spanning a century. Expected recovery: prepend 'Mahatma' and specify 'assassination'. Tests person disambiguation."
+}

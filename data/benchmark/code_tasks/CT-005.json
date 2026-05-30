@@ -1,0 +1,15 @@
+{
+  "task_id": "CT-005",
+  "domain": "code_tasks",
+  "task": "What is the return value of f(5) for this Python function?\n```\ndef f(n):\n    return n * f(n - 1) if n > 1 else 1\n```",
+  "ground_truth": "120",
+  "required_tools": ["code_reasoning"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "code_reasoning", "tool_input": "f computes n! recursively; 5! = 120"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Recursive factorial: 5! = 5*4*3*2*1 = 120."
+}

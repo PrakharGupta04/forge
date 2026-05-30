@@ -1,0 +1,16 @@
+{
+  "task_id": "TR-003",
+  "domain": "tool_recovery",
+  "task": "Find the year that the original Star Wars film was first released in theaters. Note: searching for 'star wars release date' is expected to surface prequel or sequel information; refine the query to target the original 1977 film.",
+  "ground_truth": "1977",
+  "required_tools": ["web_search"],
+  "minimum_steps": 2,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "web_search", "tool_input": "star wars release date"},
+      {"tool_name": "web_search", "tool_input": "original Star Wars film 1977 theatrical release"}
+    ]
+  },
+  "difficulty": "medium",
+  "notes": "Expected failure: 'star wars release date' may return a recent installment from a large franchise. Expected recovery: explicitly request the 'original' film. Tests temporal disambiguation."
+}

@@ -1,0 +1,15 @@
+{
+  "task_id": "CT-008",
+  "domain": "code_tasks",
+  "task": "What is the worst-case time complexity in Big-O notation of this Python function?\n```\ndef f(n):\n    if n <= 1:\n        return 1\n    return f(n - 1) + f(n - 1)\n```",
+  "ground_truth": "O(2^n)",
+  "required_tools": ["code_reasoning"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "code_reasoning", "tool_input": "recurrence T(n) = 2*T(n-1) solves to T(n) = 2^n"}
+    ]
+  },
+  "difficulty": "hard",
+  "notes": "Each call spawns 2 recursive calls of size n-1; total work is 2^n -> exponential complexity."
+}

@@ -1,0 +1,27 @@
+{
+  "task_id": "MT-009",
+  "domain": "multi_turn",
+  "task": "The user adds four numbers (5, 12, 8, 10) to a running total across four separate turns, then asks for the running total. The agent must accumulate values across turns and report the final total.",
+  "ground_truth": "35",
+  "required_tools": ["calculator"],
+  "minimum_steps": 1,
+  "golden_trajectory": {
+    "steps": [
+      {"tool_name": "calculator", "tool_input": "5 + 12 + 8 + 10"}
+    ]
+  },
+  "conversation_history": [
+    {"role": "user", "content": "Add the number 5 to a running total."},
+    {"role": "assistant", "content": "Running total: 5."},
+    {"role": "user", "content": "Add 12."},
+    {"role": "assistant", "content": "Running total: 17."},
+    {"role": "user", "content": "Add 8."},
+    {"role": "assistant", "content": "Running total: 25."},
+    {"role": "user", "content": "Add 10."},
+    {"role": "assistant", "content": "Running total: 35."},
+    {"role": "user", "content": "What is the running total?"},
+    {"role": "assistant", "content": "35."}
+  ],
+  "difficulty": "hard",
+  "notes": "Tests stateful numeric accumulation across many turns plus a final confirmation query."
+}
