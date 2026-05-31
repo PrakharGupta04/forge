@@ -1,20 +1,57 @@
 """LLM-judged hallucination metric (two-stage: extract claims, check grounding).
 
-The score is the fraction of factual claims in the agent's final answer that
-are supported by the available grounding context (tool outputs from the
-trajectory plus any RAG ``retrieved_context``).
+What this metric measures
+-------------------------
+The fraction of factual claims in the agent's final answer that are
+supported by the available grounding context (tool outputs collected
+from the trajectory plus any ``trajectory["retrieved_context"]`` chunks
+emitted by a RAG pipeline).
 
-Failure semantics:
+Methodology
+-----------
+**Claim extraction (stage 1).** A single LLM-as-judge call with a
+structured prompt (see ``_CLAIM_EXTRACTION_INSTRUCTIONS``) decomposes
+the final answer into a JSON list of concise factual claims (≤20 words
+each). Opinions, hedges, and meta-statements are excluded by design.
 
-* No answer at all -> 1.0 (an agent that produced nothing cannot hallucinate).
-* No grounding context to check against -> 0.5 (neutral) with a WARNING log.
-* No claims extracted -> 1.0 (no claims means no hallucinations).
-* A whole-stage-1 LLM failure -> 0.5 with a WARNING log.
-* A per-claim stage-2 LLM failure -> that claim is treated as ungrounded
-  (``False``) and processing continues.
+**Grounding check (stage 2).** For every extracted claim, an
+LLM-as-judge call (see ``_GROUNDING_CHECK_INSTRUCTIONS``) decides
+whether the assembled context contains evidence that supports the
+claim. Each claim contributes one boolean; the score is
+``supported / total``. A single :class:`LLMClient` instance is
+constructed once per ``score()`` call and reused across both stages and
+every per-claim check.
 
-A single LLMClient is instantiated per ``score()`` call and reused across
-both stages and every per-claim grounding check.
+Known limitations
+-----------------
+* **The judge can itself hallucinate.** Both stages rely on an LLM, so
+  errors compound: a stage-1 over-extraction can invent claims that
+  were never made, and a stage-2 false positive can mark an
+  unsupported claim as grounded.
+* **Closed-world grounding only.** The grounding check considers
+  *only* the provided context (tool outputs + ``retrieved_context``);
+  it does not consult world knowledge. A factually-correct claim that
+  happens to be absent from the context will be scored as
+  ungrounded.
+* **Cost scales with claim count.** Each claim costs one LLM call.
+  Verbose answers with many claims can be expensive at scale.
+* **Empty answer returns 1.0.** An agent that produced no answer
+  cannot hallucinate, but this is *not* the same as having done its
+  job — see the failure semantics below.
+
+Failure semantics
+-----------------
+* **Empty final answer ->** ``1.0`` (vacuous: nothing to hallucinate).
+  This can be misleading if the agent was *supposed* to produce an
+  answer; combine with :class:`TaskCompletionMetric` to detect that
+  case.
+* **No grounding context available ->** ``0.5`` (neutral) with a
+  WARNING log. Emitted when there are no tool outputs and no
+  ``retrieved_context`` — we genuinely cannot decide either way.
+* **No claims extracted ->** ``1.0`` (no claims, no hallucinations).
+* **Whole-stage-1 LLM failure ->** ``0.5`` with a WARNING log.
+* **Per-claim stage-2 failure ->** the affected claim is treated as
+  ungrounded (``False``) and processing continues.
 """
 
 from __future__ import annotations

@@ -14,6 +14,21 @@ Strengthened schema rules enforced here:
   ``tool_input``.
 * Multi-turn tasks (``domain == "multi_turn"``) must additionally include
   a ``conversation_history`` field.
+
+Optional tool-constraint fields (forward-compatible)
+----------------------------------------------------
+Task JSON may *optionally* include any of these top-level fields; they
+are loaded if present and ignored if absent, so existing benchmark
+tasks remain valid without modification:
+
+* ``required_tools`` — tools that must appear in the trajectory.
+* ``optional_tools`` — tools that may appear.
+* ``forbidden_tools`` — tools that must not appear.
+
+Use :meth:`BenchmarkLoader.get_tool_constraints` to extract these as a
+normalised dict (every field defaulting to an empty list). This
+prepares the benchmark infrastructure for future constraint-based
+evaluation without requiring any benchmark JSON edits today.
 """
 
 from __future__ import annotations
@@ -141,3 +156,36 @@ class BenchmarkLoader:
     def count(self, domain: Optional[str] = None) -> int:
         """Return the number of valid tasks discovered (overall or in one domain)."""
         return len(self.load(domain=domain))
+
+    @staticmethod
+    def get_tool_constraints(task: dict) -> dict:
+        """Return the optional tool-constraint fields of ``task`` as lists.
+
+        Returns a dict with exactly three keys: ``required_tools``,
+        ``optional_tools``, and ``forbidden_tools``. Any field that is
+        absent (or present but not a list) defaults to ``[]``. Non-list
+        values are coerced to a single-element list when they are a
+        plain string, otherwise replaced with ``[]`` — this keeps
+        downstream constraint-checking code free of type-juggling.
+        """
+        def _as_list(value) -> list:
+            if value is None:
+                return []
+            if isinstance(value, list):
+                return [v for v in value if v is not None]
+            if isinstance(value, str):
+                return [value]
+            return []
+
+        if not isinstance(task, dict):
+            return {
+                "required_tools": [],
+                "optional_tools": [],
+                "forbidden_tools": [],
+            }
+
+        return {
+            "required_tools": _as_list(task.get("required_tools")),
+            "optional_tools": _as_list(task.get("optional_tools")),
+            "forbidden_tools": _as_list(task.get("forbidden_tools")),
+        }

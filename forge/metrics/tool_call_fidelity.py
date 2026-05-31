@@ -1,25 +1,57 @@
 """Tool-call fidelity metric.
 
-Compares the agent's actual tool-call sequence against a "golden" reference
-trajectory (supplied via ``trajectory["metadata"]["golden_trajectory"]``).
+What it measures
+----------------
+Compares the agent's actual tool-call sequence to a "golden" reference
+sequence supplied via ``trajectory["metadata"]["golden_trajectory"]``.
+The golden trajectory is a dict shaped like::
 
-The score blends two signals:
+    {"steps": [{"tool_name": "...", "tool_input": "..."}, ...]}
 
-* **name_score** — Longest Common Subsequence (LCS) over the *tool names*
-  the agent invoked, normalised by the golden length. This rewards calling
-  the right tools in the right order, with deletions/insertions tolerated.
-* **input_score** — average Jaccard similarity over the *tool inputs* of
-  the matched pairs. Crucially, the matched pairs come from the
-  reconstructed LCS alignment, not naive sequential pairing — so when
-  ``actual = [A, B, C]`` and ``golden = [A, C]``, ``B`` is correctly skipped
-  and the input similarity for ``C`` is compared against ``actual[2]``.
+and is typically loaded from a benchmark task JSON (see
+:mod:`forge.benchmark.loader`).
 
-Final = ``0.7 * name_score + 0.3 * input_score`` (clamped).
+Scoring algorithm
+-----------------
+Two sub-scores are blended into the final value:
+
+* **name_score** — Longest Common Subsequence (LCS) length over the
+  *tool names* the agent invoked, divided by the golden length and
+  clamped to ``[0, 1]``. LCS rewards calling the right tools in the
+  right order; deletions, insertions, and out-of-order calls cost
+  alignment.
+* **input_score** — average Jaccard similarity (whitespace-tokenised
+  set overlap) of the *tool inputs* across the matched pairs from the
+  reconstructed LCS path. Critically, pairs come from the LCS backtrace
+  rather than naïve ``zip(actual, golden)``: when
+  ``actual = [A, B, C]`` and ``golden = [A, C]``, ``B`` is correctly
+  skipped and ``C`` is compared against ``actual[2]``.
+
+Final score (clamped to ``[0, 1]``):
+
+    name_weight · name_score + input_weight · input_score
+
+Weights default to ``0.7 / 0.3`` and are configurable per metric
+instance via :class:`~forge.metrics.config.FidelityConfig`.
+
+Known limitation
+----------------
+``input_score`` is a Jaccard set-overlap measure, which is brittle for
+semantically equivalent but lexically different inputs
+(``"capital of France"`` vs ``"France capital city"``). The
+``use_semantic_similarity`` flag on :class:`FidelityConfig` is reserved
+for a future embedding-based input comparison; the current scorer does
+not yet act on it. Likewise ``penalize_extra_calls`` is accepted today
+but not yet wired into the LCS-normalised name score.
 """
 
 from __future__ import annotations
 
+from typing import Optional
+
 from forge.metrics.base import BaseMetric
+from forge.metrics.config import FidelityConfig
+from forge.metrics.result import MetricResult
 
 
 class ToolCallFidelityMetric(BaseMetric):
@@ -27,11 +59,78 @@ class ToolCallFidelityMetric(BaseMetric):
 
     METRIC_NAME = "tool_call_fidelity"
 
+    def __init__(self, config: Optional[FidelityConfig] = None) -> None:
+        super().__init__()
+        self.config = config if config is not None else FidelityConfig()
+
     @property
     def name(self) -> str:
         return self.METRIC_NAME
 
     def score(self, trajectory: dict) -> float:
+        return self._compute(trajectory)["score"]
+
+    def score_with_explanation(self, trajectory: dict) -> MetricResult:
+        """Return a :class:`MetricResult` with intermediate alignment values.
+
+        Calls ``self.score(trajectory)`` first so that any test that
+        patches ``score`` (see ``tests/unit/test_engine_complete.py``)
+        observes the patched value here too. Intermediate values for the
+        explanation are captured via a best-effort second call to
+        :meth:`_compute`; if that re-computation raises (e.g. patched
+        scores on a synthetic trajectory with no golden), the
+        explanation degrades to a generic ``"Score: 0.xxx"`` sentence
+        but the (patched) score is still surfaced.
+        """
+        final_score = self.score(trajectory)
+
+        try:
+            info = self._compute(trajectory)
+        except Exception:
+            return MetricResult(
+                score=final_score,
+                explanation=f"Score: {final_score:.3f}",
+                metadata={},
+                metric_name=self.name,
+            )
+
+        lcs_length = info["lcs_length"]
+        golden_length = info["golden_length"]
+        name_score = info["name_score"]
+        input_score = info["input_score"]
+        actual_tool_count = info["actual_tool_count"]
+        golden_tool_count = info["golden_tool_count"]
+
+        explanation = (
+            f"Tool sequence matched {lcs_length}/{golden_length} golden "
+            f"steps (name score: {name_score:.2f}, input overlap: "
+            f"{input_score:.2f})"
+        )
+        metadata = {
+            "lcs_length": lcs_length,
+            "golden_length": golden_length,
+            "name_score": name_score,
+            "input_score": input_score,
+            "actual_tool_count": actual_tool_count,
+            "golden_tool_count": golden_tool_count,
+        }
+        return MetricResult(
+            score=final_score,
+            explanation=explanation,
+            metadata=metadata,
+            metric_name=self.name,
+        )
+
+    # ----------------------------------------------------------------- internal
+
+    def _compute(self, trajectory: dict) -> dict:
+        """Run the full LCS + Jaccard pipeline and return intermediates.
+
+        Used by both :meth:`score` (for the float) and
+        :meth:`score_with_explanation` (for the metadata bag). Raises
+        ``ValueError`` on missing/empty ``golden_trajectory``, matching
+        the prior behaviour of :meth:`score`.
+        """
         actual_calls = [
             s for s in trajectory.get("steps", []) if s.get("type") == "tool_call"
         ]
@@ -63,8 +162,20 @@ class ToolCallFidelityMetric(BaseMetric):
             ]
             input_score = sum(similarities) / len(similarities)
 
-        final = 0.7 * name_score + 0.3 * input_score
-        return max(0.0, min(1.0, final))
+        nw = float(self.config.name_weight)
+        iw = float(self.config.input_weight)
+        final = nw * name_score + iw * input_score
+        final = max(0.0, min(1.0, final))
+
+        return {
+            "score": final,
+            "name_score": name_score,
+            "input_score": input_score,
+            "lcs_length": len(pairs),
+            "golden_length": len(golden_steps),
+            "actual_tool_count": len(actual_calls),
+            "golden_tool_count": len(golden_steps),
+        }
 
     def _lcs_tool_names(self, actual: list, golden: list) -> int:
         """Return the LCS length when matching only on ``tool_name`` equality."""
