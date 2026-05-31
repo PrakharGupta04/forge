@@ -17,10 +17,11 @@ import pytest
 from forge.metrics.reasoning_coherence import ReasoningCoherenceMetric
 
 
-@pytest.fixture(scope="module")
-def metric() -> ReasoningCoherenceMetric:
-    """Load the embedding model once and share across all tests in the module."""
-    return ReasoningCoherenceMetric()
+@pytest.fixture(scope="function")
+def metric():
+    ReasoningCoherenceMetric._model_cache.clear()
+    m = ReasoningCoherenceMetric()
+    return m
 
 
 def _llm(idx: int, output: str) -> dict:

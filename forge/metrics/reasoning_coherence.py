@@ -56,38 +56,45 @@ class ReasoningCoherenceMetric(BaseMetric):
             ) from exc
         ReasoningCoherenceMetric._model_cache[model_name] = model
         self._model = ReasoningCoherenceMetric._model_cache[model_name]
+        _ = self._model.encode(["warmup"], convert_to_numpy=True)
 
     @property
     def name(self) -> str:
         return self.METRIC_NAME
 
     def score(self, trajectory: dict) -> float:
+        steps = trajectory.get("steps", [])
+        llm_steps = [s for s in steps if s.get("type") == "llm_call"]
         texts: list[str] = []
-        for step in trajectory.get("steps", []):
-            if step.get("type") != "llm_call":
-                continue
-            out = step.get("output")
-            if out is None or out == "":
-                continue
-            texts.append(out if isinstance(out, str) else str(out))
+        for s in llm_steps:
+            raw = s.get("output", "")
+            if raw is None:
+                text = ""
+            elif isinstance(raw, dict):
+                text = str(
+                    raw.get("text") or raw.get("content") or raw.get("output") or ""
+                )
+            elif isinstance(raw, str):
+                text = raw
+            else:
+                text = str(raw)
+            text = text.strip()
+            if len(text) >= 3:
+                texts.append(text)
 
-        # < 2 non-empty LLM outputs -> trivially coherent by design, not a
-        # default fallback for missing data.
         if len(texts) < 2:
             return 1.0
 
-        embeddings = self._model.encode(texts, convert_to_numpy=True)
+        embeddings = self._model.encode(
+            texts, convert_to_numpy=True, normalize_embeddings=True
+        )
 
-        similarities: list[float] = []
+        sims: list[float] = []
         for i in range(len(embeddings) - 1):
-            a = embeddings[i]
-            b = embeddings[i + 1]
-            na = float(np.linalg.norm(a))
-            nb = float(np.linalg.norm(b))
-            if na == 0.0 or nb == 0.0:
-                similarities.append(0.0)
-                continue
-            similarities.append(float(np.dot(a, b) / (na * nb)))
+            sim = float(np.dot(embeddings[i], embeddings[i + 1]))
+            sims.append(sim)
 
-        mean_similarity = float(np.mean(similarities))
-        return max(0.0, min(1.0, mean_similarity))
+        if not sims:
+            return 1.0
+
+        return max(0.0, min(1.0, float(np.mean(sims))))

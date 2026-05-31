@@ -3,16 +3,41 @@
 Exercises the full Forge Week-3 pipeline against a **real** Groq-backed
 LangChain ReAct agent on 3 ``factual_research`` benchmark tasks::
 
-    BenchmarkLoader -> BenchmarkRunner -> agent_fn (ChatGroq + DuckDuckGo)
-                                       -> ForgeTracer (per-task)
+    BenchmarkLoader -> BenchmarkRunner -> AgentExecutor (ChatGroq + DuckDuckGo)
+                                       -> ForgeTracer (per-task, injected
+                                          into executor's callbacks chain)
                                        -> MetricEngine (7 metrics + composite)
                                        -> aggregate_scores
 
+Two architectural choices that make this test exercise the real
+production path (rather than an easier mock-style path):
+
+1. **The ``AgentExecutor`` is passed directly to ``BenchmarkRunner``** —
+   no wrapper function. ``BenchmarkRunner._invoke_agent`` now dispatches
+   on ``isinstance(agent_fn, AgentExecutor)`` and calls
+   ``agent_fn.invoke({"input": task}, config={"callbacks": [tracer]})``,
+   so the per-task ``ForgeTracer`` is plumbed into the executor's
+   callback chain at invocation time and observes every LLM and tool
+   event. A wrapper function would silently fall back to the
+   plain-callable branch and produce empty trajectories, defeating the
+   point of the integration test.
+
+2. **The DuckDuckGo tool is constructed with ``name="web_search"``** —
+   the canonical vocabulary used by every ``factual_research`` benchmark
+   task's ``golden_trajectory.steps[*].tool_name``. LangChain's default
+   name is ``"duckduckgo_search"``, which would cause
+   ``ToolCallFidelityMetric`` to score 0.0 on every task because its
+   LCS-over-tool-names alignment would never match. Overriding the name
+   at construction is the right place to bind the abstract benchmark
+   vocabulary to a concrete LangChain tool implementation — this keeps
+   the benchmark JSON framework-agnostic and the runner free of
+   tool-alias bookkeeping.
+
 Database persistence is intentionally skipped (``db=None``) so the test
-does not require a running Postgres. The LangChain import surface mirrors
-``scripts/test_integration_week2.py`` (``langchain_classic`` for the
-legacy AgentExecutor/ReAct/hub APIs, ``langchain_core.prompts`` for
-``PromptTemplate``), and the hub pull is wrapped in a try/except so the
+does not require a running Postgres. The LangChain import surface
+mirrors ``scripts/test_integration_week2.py`` (``langchain_classic`` for
+the legacy AgentExecutor/ReAct/hub APIs, ``langchain_core.prompts`` for
+``PromptTemplate``); the hub pull is wrapped in a try/except so the
 script keeps working when LangChain Hub is unreachable or requires
 ``dangerously_pull_public_prompt=True``.
 
@@ -23,17 +48,15 @@ Run with::
 Requires ``GROQ_API_KEY`` in ``.env`` and outbound network access to the
 Groq API and to DuckDuckGo (and optionally to LangChain Hub).
 
-Note on tracing: the runner detects a plain callable ``agent_fn`` and
-calls it directly, which means it does NOT plumb the per-task
-``ForgeTracer`` into the executor's callback chain. The agent still runs
-end-to-end with real LLM and tool calls, but the captured trajectory's
-``steps`` will be empty — only ``final_answer`` is populated. This is by
-design: the spec calls for a wrapper-function interface, and the goal of
-this integration test is to verify orchestration (loader -> runner ->
-engine -> aggregation), not callback-driven step capture (which is
-covered by ``scripts/test_integration_week2.py``). All seven metrics
-still produce bounded floats, the composite score is computed, and the
-aggregate is taken across the 3 tasks.
+Calibration note (not a correctness issue): ``StepEfficiencyMetric``
+divides ``metadata.minimum_steps`` (which the benchmark JSON sets to
+the number of golden tool calls) by ``len(trajectory.steps)`` (which
+counts every LLM + tool step a ReAct agent emits). A correct agent
+that takes the minimum number of tool calls will still score below 1.0
+because of the interleaved LLM "thought" steps. The metric still ranks
+fewer-step agents higher; only the absolute number is conservative.
+This is a calibration choice, not a structural defect, so it isn't
+asserted against here.
 """
 
 from __future__ import annotations
@@ -117,7 +140,9 @@ def main() -> None:
     # ----- [1/5] Agent setup ---------------------------------------------------
     print("\n[1/5] Setting up live ChatGroq + DuckDuckGo ReAct agent...")
     llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
-    search = DuckDuckGoSearchRun()
+    # Override the tool name to the benchmark's canonical vocabulary
+    # (``web_search``); see module docstring for the rationale.
+    search = DuckDuckGoSearchRun(name="web_search")
     tools = [search]
     prompt = _build_prompt()
     agent = create_react_agent(llm, tools, prompt)
@@ -129,19 +154,15 @@ def main() -> None:
         max_iterations=4,
     )
 
-    # The runner's canonical agent_fn interface is `(task: str) -> str`. We
-    # close over `executor` here and normalize its dict return shape into a
-    # plain string so the runner never sees a LangChain-specific payload.
-    def agent_fn(task: str) -> str:
-        result = executor.invoke({"input": task})
-        if isinstance(result, dict):
-            return result.get("output", "") or ""
-        return result if isinstance(result, str) else ("" if result is None else str(result))
-
     # ----- [2/5] Benchmark run -------------------------------------------------
+    # Pass the AgentExecutor directly — BenchmarkRunner._invoke_agent
+    # uses isinstance(self.agent_fn, AgentExecutor) to dispatch and will
+    # plumb the per-task ForgeTracer into config={"callbacks": [tracer]}.
+    # Wrapping in a function would silently fall back to the plain-callable
+    # branch and produce empty trajectories.
     print("\n[2/5] Running BenchmarkRunner on 3 factual_research tasks...")
     runner = BenchmarkRunner(
-        agent_fn=agent_fn,
+        agent_fn=executor,
         agent_id="groq_react_v1",
         db=None,
     )
