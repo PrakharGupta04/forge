@@ -7,12 +7,18 @@ The runner ties together the Week 3 components:
 * :class:`MetricEngine` scores the captured trajectory across all 7 metrics.
 * Optional :class:`Database` persists the trajectory and evaluation.
 
-The runner is **framework-agnostic**: it detects an agent's capabilities
-via ``hasattr(agent_fn, "invoke")`` rather than hard-coupling to
-``langchain.AgentExecutor`` (or any other concrete type). LangChain-style
-invokables get their input dict and callbacks plumbed through; plain
-callables are simply called with the task string and their return value
-is recorded as the trajectory's ``final_answer`` before evaluation.
+The runner uses **native LangChain dispatch** for ``AgentExecutor``
+instances: when ``agent_fn`` is an executor, the runner calls
+``agent_fn.invoke({"input": task}, config={"callbacks": [tracer]})``
+directly so the per-task :class:`ForgeTracer` is plumbed into the
+executor's callback chain **at invocation time** and actually observes
+every LLM/tool event fired inside the executor. (Construction-time
+callbacks would force one executor per task, which defeats the
+benchmark runner's whole point.) Any non-``AgentExecutor`` agent is
+treated as a plain callable and invoked with the task string directly;
+its return value is recorded as the trajectory's ``final_answer``, but
+no internal steps are captured because plain callables cannot accept
+a callback handler.
 
 A critical orchestration step is the **metadata injection** into the
 captured trajectory before evaluation: ``minimum_steps`` and
@@ -31,6 +37,26 @@ from forge.benchmark.loader import BenchmarkLoader
 from forge.capture.langchain_tracer import ForgeTracer
 from forge.metrics.engine import MetricEngine
 from forge.server.db import Database
+
+
+# Native dispatch on LangChain ``AgentExecutor`` requires the class to be
+# importable for an isinstance check. The 1.x public surface re-homed the
+# executor under ``langchain_classic.agents``; we try the canonical
+# ``langchain.agents`` path first (forward-compatible with anything that
+# re-exports it there) and fall back to ``langchain_classic.agents`` so
+# the isinstance branch actually fires on this project's installed stack.
+# If neither path is available, ``AgentExecutor`` is set to ``None`` and
+# every agent is treated as a plain callable — preserving the runner's
+# usability in LangChain-free environments.
+try:
+    from langchain.agents import AgentExecutor  # type: ignore[import-not-found]
+except ImportError:
+    try:
+        from langchain_classic.agents import (  # type: ignore[import-not-found]
+            AgentExecutor,
+        )
+    except ImportError:
+        AgentExecutor = None  # type: ignore[assignment,misc]
 
 
 logger = logging.getLogger(__name__)
@@ -99,7 +125,7 @@ class BenchmarkRunner:
         )
 
         try:
-            final_answer = self._invoke_agent(self.agent_fn, task["task"], tracer)
+            final_answer = self._invoke_agent(task["task"], tracer)
         except Exception as exc:
             logger.error(
                 "BenchmarkRunner: agent failed on task %s: %s", task_id, exc
@@ -170,18 +196,34 @@ class BenchmarkRunner:
 
         return result
 
-    @staticmethod
-    def _invoke_agent(agent_fn: Callable, task_text: str, tracer: ForgeTracer) -> str:
-        """Dispatch on agent capability; return the final answer as a string."""
-        invoke = getattr(agent_fn, "invoke", None)
-        if callable(invoke):
-            result = invoke({"input": task_text}, config={"callbacks": [tracer]})
+    def _invoke_agent(self, task: str, tracer: ForgeTracer) -> str:
+        """Dispatch on agent type; return the final answer as a string.
+
+        Native LangChain branch: when ``self.agent_fn`` is an
+        :class:`AgentExecutor`, invoke it with
+        ``config={"callbacks": [tracer]}`` so the per-task tracer is
+        plumbed into the executor's callback chain and observes every
+        LLM and tool event. This is the only way the tracer constructed
+        inside :meth:`_run_one` can see what happens inside the
+        executor.
+
+        Plain-callable branch: simply call ``self.agent_fn(task)`` —
+        plain callables cannot accept a callback handler, so their
+        trajectories will carry only ``final_answer`` (no captured
+        steps). The ``AgentExecutor is None`` guard preserves this
+        branch as the default when LangChain is not installed.
+        """
+        if AgentExecutor is not None and isinstance(self.agent_fn, AgentExecutor):
+            result = self.agent_fn.invoke(
+                {"input": task}, config={"callbacks": [tracer]}
+            )
             if isinstance(result, dict):
                 return result.get("output", "") or ""
-            return str(result) if result is not None else ""
+            if result is None:
+                return ""
+            return result if isinstance(result, str) else str(result)
 
-        # Plain callable (function, lambda, class with __call__, ...).
-        result = agent_fn(task_text)
+        result = self.agent_fn(task)
         if result is None:
             return ""
         return result if isinstance(result, str) else str(result)
