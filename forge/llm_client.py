@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 from typing import Any
 
 from dotenv import load_dotenv
@@ -84,6 +85,22 @@ class LLMClient:
             )
             raise
 
+    def _repair_json(self, raw: str) -> str:
+        result = re.sub(r",\s*([}\]])", r"\1", raw)
+        result = result.replace("\u201c", '"').replace("\u201d", '"')
+        def _quote_if_not_literal(m):
+            val = m.group(1).strip()
+            if val in {"true", "false", "null"}:
+                return val
+            return '"' + val + '"'
+
+        result = re.sub(
+            r'(?<=:\s)([A-Za-z][^,\}\]\n"]{2,}?)(?=\s*[,\}\]])',
+            _quote_if_not_literal,
+            result,
+        )
+        return result
+
     def complete_json(self, prompt: str) -> dict[str, Any]:
         """Return a parsed JSON object from the model, retrying on parse failure."""
         full_prompt = f"{prompt}\n\n{_JSON_INSTRUCTION}"
@@ -96,14 +113,18 @@ class LLMClient:
             try:
                 parsed = json.loads(cleaned)
             except json.JSONDecodeError as exc:
-                last_error = exc
-                logger.warning(
-                    "LLMClient.complete_json attempt %d/%d failed to parse JSON: %s",
-                    attempt,
-                    _MAX_JSON_ATTEMPTS,
-                    exc,
-                )
-                continue
+                try:
+                    repaired = self._repair_json(cleaned)
+                    parsed = json.loads(repaired)
+                except json.JSONDecodeError as repair_exc:
+                    last_error = repair_exc
+                    logger.warning(
+                        "LLMClient.complete_json attempt %d/%d failed to parse JSON: %s",
+                        attempt,
+                        _MAX_JSON_ATTEMPTS,
+                        repair_exc,
+                    )
+                    continue
 
             if not isinstance(parsed, dict):
                 last_error = ValueError(
