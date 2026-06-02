@@ -49,7 +49,7 @@ from datetime import datetime, timezone
 
 import redis
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, Request  # noqa: F401
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 # slowapi: the rate-limit handler lives at the *top-level* ``slowapi``
@@ -64,8 +64,12 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 
+from forge.capture.trajectory import Trajectory
+from forge.metrics.config import WeightingConfig
+from forge.metrics.engine import MetricEngine
 from forge.metrics.reasoning_coherence import ReasoningCoherenceMetric
 from forge.server.db import Database
+from forge.server.models import EvaluateRequest, EvaluateResponse
 
 
 load_dotenv()
@@ -355,3 +359,148 @@ async def health(request: Request):
         status_code=200 if operational_ok else 503,
         content=payload,
     )
+
+
+# ---------------------------------------------------------------- /evaluate
+
+# Stricter per-IP cap than the global default to discourage abuse of the
+# evaluation path, which is the only endpoint today that can drive
+# expensive LLM-as-judge calls and embedding-model warm-up.
+@app.post("/evaluate", response_model=EvaluateResponse)
+@limiter.limit("30/minute")
+async def evaluate(
+    request: Request,
+    body: EvaluateRequest,
+    db: Database = Depends(get_db),
+) -> EvaluateResponse:
+    """Score a submitted trajectory with the full Forge metric suite.
+
+    Pipeline:
+      1. Validate the trajectory payload (422 on schema / semantic issues).
+      2. Select a :class:`WeightingConfig` from ``body.weighting_strategy``.
+      3. Run :meth:`MetricEngine.run_all_with_explanations`.
+      4. Split the rich per-metric results into ``scores`` (floats) and
+         ``explanations`` (strings); synthesise ``_has_failures`` and
+         ``_metric_errors`` from each metric's ``had_error`` /
+         ``error_message`` channel (these keys are intentionally absent
+         from ``run_all_with_explanations`` output — only ``run_all``
+         emits them — so the API layer rebuilds them here).
+      5. Build an immutable ``evaluation_config`` provenance dict.
+      6. Best-effort persist trajectory + evaluation. Database failures
+         do not fail the request: ``trajectory_id`` and/or
+         ``evaluation_id`` come back as ``"unsaved"`` and the caller
+         still receives the scores.
+
+    Notes:
+      * The first request after process start may be slow because
+        :class:`ReasoningCoherenceMetric` lazily downloads / loads its
+        embedding model on first instantiation. Subsequent requests
+        reuse the class-level cache and are fast. This is expected and
+        not a degraded state.
+      * ``HTTPException`` raised by the validation step is propagated
+        unchanged; only unexpected exceptions are converted to 500 so
+        422 validation failures remain 422 to the client.
+      * ``body.metrics``, when non-empty, narrows the metric set to the
+        requested subset (matches :class:`MetricEngine`'s ``metric_names``
+        contract). Empty list means "run every registered metric".
+    """
+    try:
+        try:
+            trajectory_model = Trajectory.from_dict(body.trajectory)
+            trajectory_model.validate()
+        except (TypeError, ValueError) as exc:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid trajectory schema: {exc}",
+            )
+
+        if body.weighting_strategy == "research":
+            weighting_config = WeightingConfig.research_weights()
+        else:
+            weighting_config = WeightingConfig.equal_weights()
+
+        engine = MetricEngine(
+            metric_names=body.metrics if body.metrics else None,
+            weighting_config=weighting_config,
+        )
+
+        rich_results = engine.run_all_with_explanations(body.trajectory)
+
+        composite_score = float(rich_results.get("composite_score", 0.0))
+        scores: dict[str, float] = {}
+        explanations: dict[str, str] = {}
+        metric_errors: dict[str, str] = {}
+        for name, entry in rich_results.items():
+            if name == "composite_score":
+                continue
+            if not isinstance(entry, dict):
+                continue
+            scores[name] = float(entry.get("score", 0.0))
+            explanations[name] = str(entry.get("explanation", ""))
+            if entry.get("had_error"):
+                metric_errors[name] = (
+                    entry.get("error_message") or "unknown error"
+                )
+        has_failures = bool(metric_errors)
+
+        provider = os.getenv("LLM_PROVIDER", "groq")
+        judge_model = (
+            "llama-3.3-70b-versatile" if provider == "groq" else "phi3:mini"
+        )
+        evaluation_config = {
+            "metric_names": engine.available_metrics(),
+            "weighting_strategy": body.weighting_strategy,
+            "weights": weighting_config.normalized_weights(),
+            "judge_provider": provider,
+            "judge_model": judge_model,
+            "forge_version": "0.1.0",
+            "evaluated_at": datetime.utcnow().isoformat(),
+        }
+
+        if db is not None:
+            try:
+                trajectory_id = db.save_trajectory(
+                    body.trajectory,
+                    agent_id=body.trajectory.get("agent_id", "api_submission"),
+                )
+            except Exception as exc:
+                logger.warning("evaluate: save_trajectory failed: %s", exc)
+                trajectory_id = "unsaved"
+        else:
+            logger.warning(
+                "evaluate: db unavailable at startup; trajectory not persisted"
+            )
+            trajectory_id = "unsaved"
+
+        if db is not None and trajectory_id != "unsaved":
+            try:
+                evaluation_id = db.save_evaluation_with_config(
+                    trajectory_id, scores, evaluation_config
+                )
+            except Exception as exc:
+                logger.warning(
+                    "evaluate: save_evaluation_with_config failed: %s", exc
+                )
+                evaluation_id = "unsaved"
+        else:
+            evaluation_id = "unsaved"
+
+        return EvaluateResponse(
+            evaluation_id=evaluation_id,
+            trajectory_id=trajectory_id,
+            scores=scores,
+            explanations=explanations if body.include_explanations else {},
+            has_failures=has_failures,
+            metric_errors=metric_errors,
+            composite_score=composite_score,
+            evaluation_config=evaluation_config,
+        )
+
+    except HTTPException:
+        # Preserve client-visible HTTP errors (notably the 422 above);
+        # converting them to 500 would mask validation failures behind a
+        # generic server-error response.
+        raise
+    except Exception:
+        logger.exception("evaluate: unexpected failure")
+        raise HTTPException(status_code=500, detail="Evaluation failed")
