@@ -76,8 +76,10 @@ from forge.server.models import (
     BenchmarkRunRequest,
     BenchmarkRunResponse,
     BenchmarkStatusResponse,
+    CompareResponse,
     EvaluateRequest,
     EvaluateResponse,
+    LeaderboardEntry,
 )
 
 
@@ -917,3 +919,305 @@ async def get_benchmark_status(
         aggregate_scores=row.get("avg_scores"),
         error=None,
     )
+
+
+# ----------------------------------------------------------------- /compare
+
+# Per-agent aggregate query: averages the seven metric columns and
+# composite_score across every evaluation whose trajectory belongs to
+# ``agent_id``, plus collects the distinct judge_models used. Judge
+# model lives inside ``evaluations.evaluation_config`` (JSONB, added by
+# migration 001) so older rows without provenance show up as a NULL in
+# the array — filtered out by the WHERE on the inner expression so the
+# returned list contains only real provider/model labels.
+_AGENT_AGGREGATE_SQL = """
+    SELECT
+        AVG(e.task_completion)     AS task_completion,
+        AVG(e.tool_call_fidelity)  AS tool_call_fidelity,
+        AVG(e.reasoning_coherence) AS reasoning_coherence,
+        AVG(e.hallucination_score) AS hallucination_score,
+        AVG(e.step_efficiency)     AS step_efficiency,
+        AVG(e.recovery_rate)       AS recovery_rate,
+        AVG(e.consistency)         AS consistency,
+        AVG(e.composite_score)     AS composite_score,
+        COUNT(e.id)                AS evaluation_count,
+        COALESCE(
+            ARRAY_AGG(
+                DISTINCT (e.evaluation_config->>'judge_model')
+            ) FILTER (WHERE (e.evaluation_config->>'judge_model') IS NOT NULL),
+            ARRAY[]::text[]
+        ) AS judge_models
+    FROM evaluations e
+    JOIN trajectories t ON t.id = e.trajectory_id
+    WHERE t.agent_id = %s
+"""
+
+_METRIC_AVG_COLUMNS: tuple[str, ...] = (
+    "task_completion",
+    "tool_call_fidelity",
+    "reasoning_coherence",
+    "hallucination_score",
+    "step_efficiency",
+    "recovery_rate",
+    "consistency",
+    "composite_score",
+)
+
+
+def _fetch_agent_aggregate(db: Database, agent_id: str) -> Optional[dict]:
+    """Return per-agent averaged metric scores + judge_models set.
+
+    Returns ``None`` if the agent has zero evaluations (the
+    ``evaluation_count`` column will be 0 in that case), letting the
+    endpoint turn the absence into a 404. Lives in ``main.py`` for the
+    same reason as :func:`_fetch_benchmark_run_row` — this phase's scope
+    is "modify exactly one existing file"; a future refactor should
+    promote it to ``Database.get_agent_aggregate``.
+    """
+    conn = db._get_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(_AGENT_AGGREGATE_SQL, (agent_id,))
+            row = cur.fetchone()
+        conn.rollback()
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        db._put_conn(conn)
+        raise
+    db._put_conn(conn)
+
+    if row is None or int(row.get("evaluation_count") or 0) == 0:
+        return None
+    return dict(row)
+
+
+def _scores_dict_from_row(row: dict) -> dict[str, float]:
+    """Coerce a per-agent aggregate row into a JSON-safe scores dict.
+
+    ``psycopg2`` returns ``Decimal`` for AVG() over FLOAT columns;
+    convert to ``float`` so the JSON response carries plain numbers,
+    and skip NULL averages (columns where every value was NULL).
+    """
+    out: dict[str, float] = {}
+    for col in _METRIC_AVG_COLUMNS:
+        value = row.get(col)
+        if value is None:
+            continue
+        try:
+            out[col] = float(value)
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
+@app.get("/compare")
+async def compare_agents(
+    agent_1: str,
+    agent_2: str,
+    db: Database = Depends(get_db),
+) -> CompareResponse:
+    """Compare two agents' average metric scores side by side.
+
+    The aggregate is per-agent across every evaluation whose trajectory
+    belongs to that ``agent_id``. ``composite_score`` is averaged
+    alongside the seven canonical metrics; the winner is the agent with
+    the higher mean composite, but only when the gap exceeds ``0.01``
+    (anything closer is reported as a tie via ``winner=None`` because
+    the difference is within the noise floor of LLM-as-judge scoring).
+
+    ``warning`` is populated when the two agents were evaluated under
+    different judge models. The ``evaluation_config`` JSONB carries
+    ``judge_model`` provenance; comparing absolute scores across
+    providers (e.g. ``llama-3.3-70b-versatile`` vs ``phi3:mini``) is
+    not meaningful, so the API surfaces a caveat rather than silently
+    pretending they're comparable.
+
+    Returns 404 if either agent has no evaluations on record.
+    """
+    if db is None:
+        raise HTTPException(
+            status_code=503,
+            detail="PostgreSQL unavailable; cannot compare agents",
+        )
+
+    try:
+        row_1 = _fetch_agent_aggregate(db, agent_1)
+        row_2 = _fetch_agent_aggregate(db, agent_2)
+    except Exception:
+        logger.exception("compare: agent aggregate query failed")
+        raise HTTPException(
+            status_code=500, detail="Compare query failed"
+        )
+
+    missing = [
+        name for name, row in ((agent_1, row_1), (agent_2, row_2))
+        if row is None
+    ]
+    if missing:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No evaluations found for agent(s): {missing}",
+        )
+
+    scores_1 = _scores_dict_from_row(row_1)
+    scores_2 = _scores_dict_from_row(row_2)
+
+    composite_1 = scores_1.get("composite_score")
+    composite_2 = scores_2.get("composite_score")
+    winner: Optional[str] = None
+    if composite_1 is not None and composite_2 is not None:
+        diff = composite_1 - composite_2
+        if diff > 0.01:
+            winner = agent_1
+        elif diff < -0.01:
+            winner = agent_2
+
+    judges_1 = set(row_1.get("judge_models") or [])
+    judges_2 = set(row_2.get("judge_models") or [])
+    warning: Optional[str] = None
+    if judges_1 and judges_2 and judges_1 != judges_2:
+        warning = (
+            f"Agents evaluated under different judge models — "
+            f"scores may not be directly comparable. "
+            f"agent_1 judges: {sorted(judges_1)}; "
+            f"agent_2 judges: {sorted(judges_2)}"
+        )
+    elif (judges_1 and not judges_2) or (judges_2 and not judges_1):
+        warning = (
+            "One agent's evaluations lack judge_model provenance "
+            "(pre-migration-001 rows); cross-agent comparison may be "
+            "skewed."
+        )
+
+    return CompareResponse(
+        agent_1=agent_1,
+        agent_2=agent_2,
+        agent_1_scores=scores_1,
+        agent_2_scores=scores_2,
+        winner=winner,
+        warning=warning,
+    )
+
+
+# --------------------------------------------------------------- /leaderboard
+
+
+@app.get("/leaderboard")
+async def get_leaderboard(
+    benchmark: Optional[str] = None,
+    exclude_mock: bool = True,
+    db: Database = Depends(get_db),
+) -> list[LeaderboardEntry]:
+    """Return completed benchmark runs ranked by composite score.
+
+    Maps each ``benchmark_runs`` row returned by
+    :meth:`Database.get_leaderboard` into a
+    :class:`~forge.server.models.LeaderboardEntry`:
+
+    * ``composite_score`` is lifted out of the ``avg_scores`` JSONB so
+      clients don't have to drill into the bag.
+    * ``completed_at`` is the ``finished_at`` timestamp rendered as ISO
+      string for trivial JSON serialisation.
+
+    Note on ``exclude_mock``: :meth:`Database.get_leaderboard` already
+    filters out ``agent_type = 'mock'`` rows at the SQL layer, so the
+    default-True path is defence-in-depth. ``exclude_mock=False`` is
+    accepted today but cannot surface mock rows from a DB method that
+    excludes them unconditionally — a future ``include_mock=True``
+    variant of the DB query would be required to honour that toggle
+    fully. The current behaviour is therefore: ``True`` → no mock rows
+    (guaranteed); ``False`` → no mock rows (same source, documented
+    limitation, never an error).
+
+    Returns ``[]`` when no rows match.
+    """
+    if db is None:
+        raise HTTPException(
+            status_code=503,
+            detail="PostgreSQL unavailable; cannot read leaderboard",
+        )
+
+    try:
+        rows = db.get_leaderboard(benchmark_name=benchmark)
+    except Exception:
+        logger.exception("leaderboard: db.get_leaderboard failed")
+        raise HTTPException(
+            status_code=500, detail="Leaderboard query failed"
+        )
+
+    entries: list[LeaderboardEntry] = []
+    for row in rows:
+        agent_type = row.get("agent_type") or "unknown"
+        if exclude_mock and agent_type == "mock":
+            continue
+
+        avg_scores = row.get("avg_scores")
+        if not isinstance(avg_scores, dict):
+            avg_scores = None
+        composite = None
+        if isinstance(avg_scores, dict):
+            raw_composite = avg_scores.get("composite_score")
+            if isinstance(raw_composite, (int, float)):
+                composite = float(raw_composite)
+
+        finished_at = row.get("finished_at")
+        completed_at_iso: Optional[str] = None
+        if finished_at is not None:
+            completed_at_iso = (
+                finished_at.isoformat()
+                if hasattr(finished_at, "isoformat")
+                else str(finished_at)
+            )
+
+        entries.append(
+            LeaderboardEntry(
+                agent_id=row.get("agent_id") or "unknown",
+                benchmark_name=row.get("benchmark_name") or "unknown",
+                composite_score=composite,
+                avg_scores=avg_scores,
+                agent_type=agent_type,
+                completed_at=completed_at_iso,
+            )
+        )
+    return entries
+
+
+# ----------------------------------------------------- /trajectories/{id}
+
+
+@app.get("/trajectories/{trajectory_id}")
+async def get_trajectory(
+    trajectory_id: str,
+    db: Database = Depends(get_db),
+) -> dict:
+    """Return one trajectory merged with its evaluation (if any).
+
+    Thin wrapper over :meth:`Database.get_trajectory_with_evaluation`.
+    Raises 404 on the documented ``ValueError`` for an unknown id, and
+    404 on a malformed UUID (psycopg2 raises ``DataError`` in that
+    case — same client outcome, "this trajectory doesn't exist").
+    """
+    if db is None:
+        raise HTTPException(
+            status_code=503,
+            detail="PostgreSQL unavailable; cannot read trajectory",
+        )
+
+    try:
+        return db.get_trajectory_with_evaluation(trajectory_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        # Malformed UUID -> psycopg2.DataError; treat as 404 for the
+        # same reason /benchmark/{job_id} does — querying a non-UUID has
+        # no "found" semantics worth distinguishing from "missing".
+        logger.warning(
+            "trajectory: lookup for %s failed: %s", trajectory_id, exc
+        )
+        raise HTTPException(
+            status_code=404,
+            detail=f"Trajectory {trajectory_id} not found",
+        )
