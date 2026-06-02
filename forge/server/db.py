@@ -160,6 +160,55 @@ class Database:
             self.conn.rollback()
             raise
 
+    def save_evaluation_with_config(
+        self,
+        trajectory_id: str,
+        scores: dict,
+        evaluation_config: dict,
+    ) -> str:
+        """Insert one row into ``evaluations`` including provenance config.
+
+        Identical to :meth:`save_evaluation` except it also writes the
+        ``evaluation_config`` JSONB column added by migration 001
+        (``migrations/001_add_evaluation_provenance.sql``). The
+        ``evaluation_config`` dict is expected to carry per-evaluation
+        provenance — ``metric_names`` (list), ``weighting_strategy``
+        ("equal" or "custom"), ``weights`` (dict),
+        ``judge_model`` (str), ``judge_provider`` ("groq" or "ollama"),
+        ``forge_version`` (str), ``evaluated_at`` (ISO timestamp str) —
+        but the storage layer does not validate the shape; it is stored
+        verbatim as JSONB so it can evolve without further migrations.
+
+        Requires that migration 001 has been applied. On a fresh schema
+        (pre-migration) this method will fail with a ``psycopg2`` error
+        about the missing ``evaluation_config`` column — use
+        :meth:`save_evaluation` against an un-migrated database.
+        """
+        columns = list(_EVALUATION_METRIC_COLUMNS) + ["composite_score"]
+        values: list[Optional[float]] = [scores.get(col) for col in columns]
+
+        col_list = ", ".join(columns)
+        placeholders = ", ".join(["%s"] * len(columns))
+
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute(
+                    f"""
+                    INSERT INTO evaluations (
+                        trajectory_id, {col_list}, evaluation_config
+                    )
+                    VALUES (%s, {placeholders}, %s)
+                    RETURNING id
+                    """,
+                    (trajectory_id, *values, Json(evaluation_config)),
+                )
+                new_id = cur.fetchone()[0]
+            self.conn.commit()
+            return str(new_id)
+        except Exception:
+            self.conn.rollback()
+            raise
+
     def close(self) -> None:
         """Close the underlying connection. Safe to call more than once."""
         try:
