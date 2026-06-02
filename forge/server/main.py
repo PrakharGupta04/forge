@@ -39,18 +39,20 @@ checks — this middleware is the fast pre-check for normal clients).
 from __future__ import annotations
 
 import asyncio
-import json  # noqa: F401  (kept available for future JSON-bodied endpoints)
+import json
 import logging
 import os
 import time  # noqa: F401  (kept available for future per-request timing)
-import uuid  # noqa: F401  (kept available for future evaluation_id generation)
+import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from typing import Optional
 
 import redis
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from psycopg2.extras import RealDictCursor
 
 # slowapi: the rate-limit handler lives at the *top-level* ``slowapi``
 # package, not in ``slowapi.errors``. The errors module only exposes the
@@ -64,12 +66,19 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 
+from forge.benchmark.loader import BenchmarkLoader
 from forge.capture.trajectory import Trajectory
 from forge.metrics.config import WeightingConfig
 from forge.metrics.engine import MetricEngine
 from forge.metrics.reasoning_coherence import ReasoningCoherenceMetric
 from forge.server.db import Database
-from forge.server.models import EvaluateRequest, EvaluateResponse
+from forge.server.models import (
+    BenchmarkRunRequest,
+    BenchmarkRunResponse,
+    BenchmarkStatusResponse,
+    EvaluateRequest,
+    EvaluateResponse,
+)
 
 
 load_dotenv()
@@ -504,3 +513,407 @@ async def evaluate(
     except Exception:
         logger.exception("evaluate: unexpected failure")
         raise HTTPException(status_code=500, detail="Evaluation failed")
+
+
+# ---------------------------------------------------------- /benchmark/run
+
+# Redis key namespace + TTLs for transient benchmark job status.
+# Queued/running entries live for an hour (long enough for any sane
+# benchmark slice); on completion or failure we shorten the TTL to 5 min
+# so the entry expires after a brief grace window for late pollers,
+# at which point GET /benchmark/{job_id} falls back to PostgreSQL — the
+# permanent source of truth.
+_JOB_KEY_PREFIX = "forge:job:"
+_REDIS_TTL_ACTIVE_SECONDS = 60 * 60
+_REDIS_TTL_TERMINAL_SECONDS = 5 * 60
+
+
+def _job_key(job_id: str) -> str:
+    return f"{_JOB_KEY_PREFIX}{job_id}"
+
+
+def _set_job_status(r, job_id: str, payload: dict, ttl_seconds: int) -> None:
+    """Best-effort write of the transient job-status entry to Redis.
+
+    Failures are logged and swallowed so a Redis outage cannot abort an
+    otherwise-healthy benchmark run; PostgreSQL remains authoritative.
+    """
+    try:
+        r.set(_job_key(job_id), json.dumps(payload), ex=ttl_seconds)
+    except Exception as exc:
+        logger.warning(
+            "benchmark: redis set for job %s failed (%s) — "
+            "PostgreSQL is still authoritative", job_id, exc
+        )
+
+
+def _known_benchmark_domains() -> set[str]:
+    """Set of valid domain names for ``body.benchmark`` (besides ``"all"``).
+
+    Read directly from the benchmark data directory so adding a new
+    domain doesn't require code changes here. Returns an empty set on
+    any I/O error so the caller can decide whether to fail-closed.
+    """
+    try:
+        data_dir = BenchmarkLoader().data_dir
+        return {p.name for p in data_dir.iterdir() if p.is_dir()}
+    except Exception as exc:
+        logger.warning("benchmark: could not enumerate domains: %s", exc)
+        return set()
+
+
+def _fetch_benchmark_run_row(db: Database, job_id: str) -> Optional[dict]:
+    """Read one ``benchmark_runs`` row by id.
+
+    Lives in ``main.py`` because the scope of this change is "modify
+    exactly one existing file"; the natural home is a
+    ``Database.get_benchmark_run(job_id)`` method, which is the
+    recommended follow-up. Uses the pooled connection via
+    ``db._get_conn()`` so the read still rides the same pool as every
+    other DB call.
+
+    Returns ``None`` when no row matches; surfaces an empty result for
+    ``GET /benchmark/{job_id}`` to convert into a 404. A malformed
+    ``job_id`` (not a valid UUID) raises ``psycopg2.DataError`` which
+    the endpoint converts to 404 as well — querying a non-UUID has no
+    sensible "found" semantics.
+    """
+    conn = db._get_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                "SELECT * FROM benchmark_runs WHERE id = %s",
+                (job_id,),
+            )
+            row = cur.fetchone()
+        conn.rollback()
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        db._put_conn(conn)
+        raise
+    db._put_conn(conn)
+    return dict(row) if row is not None else None
+
+
+async def _run_benchmark_job(
+    job_id: str,
+    body: BenchmarkRunRequest,
+    r,
+    db: Database,
+) -> None:
+    """Background task: run the benchmark, update Redis + PostgreSQL.
+
+    Runs the synchronous :meth:`BenchmarkRunner.run` inside
+    ``asyncio.to_thread`` so the FastAPI event loop is not blocked by
+    benchmark execution (which can issue many seconds of LLM and DB
+    calls). Both Redis and PostgreSQL receive a ``running`` status
+    update at the start; on success both are marked ``complete`` with
+    ``avg_scores`` populated; on any exception both are marked
+    ``failed`` with the exception message.
+
+    The PostgreSQL update is the durable record; Redis is a cache for
+    sub-second status polling that expires after
+    :data:`_REDIS_TTL_TERMINAL_SECONDS` once the job terminates.
+    """
+    _set_job_status(
+        r,
+        job_id,
+        {
+            "status": "running",
+            "job_id": job_id,
+            "total_tasks": None,
+            "completed_tasks": 0,
+            "aggregate_scores": None,
+            "error": None,
+        },
+        _REDIS_TTL_ACTIVE_SECONDS,
+    )
+    try:
+        db.update_benchmark_run(job_id, {"job_status": "running"})
+    except Exception as exc:
+        logger.warning(
+            "benchmark: PG running-status update for job %s failed: %s",
+            job_id, exc,
+        )
+
+    def _mock_agent(task: str) -> str:
+        return f"Mock answer for benchmark task: {task[:80]}"
+
+    try:
+        # Lazy import: forge.benchmark.runner pulls in langchain (~9s
+        # import cost on this stack). Keeping it out of module-top
+        # imports preserves fast API startup for /health, /, and
+        # /evaluate, which don't need the runner. The first benchmark
+        # request pays the load once per process; subsequent requests
+        # reuse Python's import cache instantly.
+        from forge.benchmark.runner import BenchmarkRunner
+
+        runner = BenchmarkRunner(
+            agent_fn=_mock_agent,
+            db=db,
+            agent_id=body.agent_id,
+        )
+        # BenchmarkRunner.run is CPU/IO blocking (loads files, calls metrics,
+        # may invoke LLM judges, writes to PG). Push it off the event loop.
+        domain = None if body.benchmark == "all" else body.benchmark
+        results = await asyncio.to_thread(
+            runner.run, domain=domain, max_tasks=body.max_tasks,
+        )
+
+        aggregate_scores = results.get("aggregate_scores") or {}
+        total_tasks = int(results.get("total_tasks", 0))
+        completed_tasks = int(results.get("completed_tasks", 0))
+
+        try:
+            # Pass the dict directly. Database.update_benchmark_run wraps
+            # avg_scores in psycopg2.extras.Json() on its own; json.dumps()
+            # here would store a stringified JSON inside a JSONB column.
+            # finished_at is TIMESTAMPTZ — pass a real UTC datetime so
+            # psycopg2 adapts it to a SQL timestamp. The string "NOW()"
+            # would be treated as a literal value and rejected.
+            db.update_benchmark_run(
+                job_id,
+                {
+                    "job_status": "complete",
+                    "total_tasks": total_tasks,
+                    "completed_tasks": completed_tasks,
+                    "avg_scores": aggregate_scores,
+                    "finished_at": datetime.now(timezone.utc),
+                    "agent_type": body.agent_type,
+                },
+            )
+        except Exception as exc:
+            logger.error(
+                "benchmark: PG complete-status update for job %s failed: %s",
+                job_id, exc,
+            )
+
+        _set_job_status(
+            r,
+            job_id,
+            {
+                "status": "complete",
+                "job_id": job_id,
+                "total_tasks": total_tasks,
+                "completed_tasks": completed_tasks,
+                "aggregate_scores": aggregate_scores,
+                "error": None,
+            },
+            _REDIS_TTL_TERMINAL_SECONDS,
+        )
+
+    except Exception as exc:
+        logger.exception("benchmark: job %s failed", job_id)
+        try:
+            db.update_benchmark_run(
+                job_id,
+                {
+                    "job_status": "failed",
+                    "finished_at": datetime.now(timezone.utc),
+                    "agent_type": body.agent_type,
+                },
+            )
+        except Exception as inner_exc:
+            logger.error(
+                "benchmark: PG failed-status update for job %s failed: %s",
+                job_id, inner_exc,
+            )
+        _set_job_status(
+            r,
+            job_id,
+            {
+                "status": "failed",
+                "job_id": job_id,
+                "total_tasks": None,
+                "completed_tasks": 0,
+                "aggregate_scores": None,
+                "error": str(exc),
+            },
+            _REDIS_TTL_TERMINAL_SECONDS,
+        )
+
+
+# Stricter cap than the global default — benchmarks are the most
+# expensive endpoint (every accepted request schedules a multi-task
+# background run). 5/min/IP still leaves plenty of headroom for an
+# interactive UI driving the API.
+@app.post("/benchmark/run", response_model=BenchmarkRunResponse)
+@limiter.limit("5/minute")
+async def run_benchmark(
+    request: Request,
+    body: BenchmarkRunRequest,
+    background_tasks: BackgroundTasks,
+    db: Database = Depends(get_db),
+    r=Depends(get_redis),
+) -> BenchmarkRunResponse:
+    """Queue a benchmark run and return a job_id for status polling.
+
+    Synchronous validation is performed before the job is queued:
+
+    * ``body.benchmark`` must be ``"all"`` or a known domain
+      subdirectory under ``data/benchmark/`` — 422 otherwise. Failing
+      late (inside the background task) would make the only signal a
+      ``failed`` status on the eventual GET, which is much harder for
+      clients to react to.
+    * ``body.max_tasks``, if set, must be a positive integer — 422
+      otherwise.
+
+    Operational dependencies:
+
+    * PostgreSQL is the source of truth for benchmark runs. If
+      ``Database`` failed to initialise at startup the endpoint
+      returns 503 — the run cannot be queued because the permanent
+      record cannot be created.
+    * Redis holds the transient sub-second status entry. If Redis is
+      unavailable the run is still queued; ``GET /benchmark/{job_id}``
+      will fall back to the PostgreSQL record for status.
+    """
+    try:
+        if body.benchmark != "all":
+            known = _known_benchmark_domains()
+            if known and body.benchmark not in known:
+                raise HTTPException(
+                    status_code=422,
+                    detail=(
+                        f"Unknown benchmark {body.benchmark!r}; "
+                        f"expected 'all' or one of {sorted(known)}"
+                    ),
+                )
+        if body.max_tasks is not None and body.max_tasks <= 0:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"max_tasks must be a positive integer when set; "
+                    f"got {body.max_tasks!r}"
+                ),
+            )
+
+        if db is None:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "PostgreSQL unavailable; benchmark runs require the "
+                    "permanent record store and cannot be queued"
+                ),
+            )
+
+        job_id = str(uuid.uuid4())
+
+        try:
+            db.save_benchmark_run(
+                job_id, body.agent_id, body.benchmark, body.agent_type,
+            )
+        except Exception as exc:
+            logger.exception("benchmark: save_benchmark_run failed")
+            raise HTTPException(
+                status_code=503,
+                detail=f"Could not persist benchmark run: {exc}",
+            )
+
+        initial_payload = {
+            "status": "queued",
+            "job_id": job_id,
+            "total_tasks": None,
+            "completed_tasks": 0,
+            "aggregate_scores": None,
+            "error": None,
+        }
+        if r is not None:
+            _set_job_status(r, job_id, initial_payload, _REDIS_TTL_ACTIVE_SECONDS)
+        else:
+            logger.warning(
+                "benchmark: redis unavailable; job %s will only be "
+                "observable via PostgreSQL", job_id
+            )
+
+        background_tasks.add_task(_run_benchmark_job, job_id, body, r, db)
+
+        return BenchmarkRunResponse(
+            job_id=job_id,
+            status="queued",
+            benchmark=body.benchmark,
+            agent_id=body.agent_id,
+        )
+
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("benchmark/run: unexpected failure")
+        raise HTTPException(status_code=500, detail="Benchmark queue failed")
+
+
+@app.get("/benchmark/{job_id}", response_model=BenchmarkStatusResponse)
+async def get_benchmark_status(
+    job_id: str,
+    r=Depends(get_redis),
+    db: Database = Depends(get_db),
+) -> BenchmarkStatusResponse:
+    """Return current status of a benchmark job.
+
+    Source-of-truth split:
+
+    * Redis is consulted first; if the ``queued`` or ``running`` entry
+      is present, return it (sub-second transient state).
+    * Otherwise (Redis miss, Redis unavailable, or Redis entry is a
+      terminal status that may have aged out), fall back to the
+      PostgreSQL ``benchmark_runs`` row — the permanent record.
+    * If neither source knows the job, 404.
+
+    The fallback ordering matters: a *completed* job's Redis entry
+    expires after :data:`_REDIS_TTL_TERMINAL_SECONDS` (5 min), but the
+    PostgreSQL row is durable, so a poller arriving after that window
+    still gets a useful response.
+    """
+    if r is not None:
+        try:
+            raw = r.get(_job_key(job_id))
+        except Exception as exc:
+            logger.warning(
+                "benchmark: redis get for job %s failed: %s", job_id, exc
+            )
+            raw = None
+        if raw is not None:
+            try:
+                cached = json.loads(raw)
+            except Exception:
+                cached = None
+            if cached is not None and cached.get("status") in (
+                "queued", "running",
+            ):
+                return BenchmarkStatusResponse(
+                    job_id=cached.get("job_id", job_id),
+                    status=cached["status"],
+                    total_tasks=cached.get("total_tasks"),
+                    completed_tasks=cached.get("completed_tasks"),
+                    aggregate_scores=cached.get("aggregate_scores"),
+                    error=cached.get("error"),
+                )
+
+    if db is None:
+        raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+
+    try:
+        row = _fetch_benchmark_run_row(db, job_id)
+    except Exception as exc:
+        # Malformed UUID and similar DB-level rejects fall through here.
+        # The job cannot be looked up either way — surface as 404 so the
+        # client gets a single, consistent "doesn't exist" signal.
+        logger.warning(
+            "benchmark: PG lookup for job %s failed: %s", job_id, exc
+        )
+        raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+
+    return BenchmarkStatusResponse(
+        job_id=str(row.get("id", job_id)),
+        status=row.get("job_status") or "unknown",
+        total_tasks=row.get("total_tasks"),
+        completed_tasks=row.get("completed_tasks"),
+        aggregate_scores=row.get("avg_scores"),
+        error=None,
+    )
