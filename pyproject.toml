@@ -9,6 +9,7 @@ description = "Open evaluation framework for multi-step LLM agents"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.111",
+    "slowapi>=0.1.9",
     "uvicorn[standard]",
     "pydantic>=2",
     "langchain>=0.2",
