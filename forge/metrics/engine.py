@@ -84,24 +84,29 @@ class MetricEngine:
             }
 
         Empty registry short-circuits to ``{"composite_score": 0.0}``.
-        """
-        if not self.ALL_METRICS:
-            logger.warning(
-                "MetricEngine.run_all called with no registered metrics; "
-                "returning composite_score=0.0"
-            )
-            return {"composite_score": 0.0}
 
-        per_metric = self._run_metrics(trajectory)
+        Implementation note: this method is a **presentation-layer
+        wrapper** around :meth:`run_all_with_explanations`. All
+        evaluation logic — metric instantiation, exception capture,
+        composite scoring, and error aggregation — lives in
+        ``run_all_with_explanations`` so there is exactly one source of
+        truth. ``run_all`` only strips explanations and metadata from
+        the rich result and reconstructs the legacy ``_metric_errors``
+        and ``_has_failures`` keys from each metric's ``had_error`` /
+        ``error_message`` fields.
+        """
+        rich = self.run_all_with_explanations(trajectory)
 
         results: dict = {}
         errors: dict[str, str] = {}
-        for name, result in per_metric.items():
-            results[name] = result.score
-            if result.had_error and result.error_message is not None:
-                errors[name] = result.error_message
+        for name, entry in rich.items():
+            if name == "composite_score":
+                continue
+            results[name] = entry["score"]
+            if entry.get("had_error"):
+                errors[name] = entry.get("error_message") or "unknown error"
 
-        results["composite_score"] = self._weighted_composite(per_metric)
+        results["composite_score"] = rich.get("composite_score", 0.0)
 
         if errors:
             results["_metric_errors"] = errors
@@ -110,18 +115,35 @@ class MetricEngine:
         return results
 
     def run_all_with_explanations(self, trajectory: dict) -> dict:
-        """Like :meth:`run_all` but every metric key maps to the full
-        ``MetricResult.to_dict()`` (score + explanation + metadata +
-        error fields). ``composite_score`` is the weighted composite
-        float, same as :meth:`run_all`.
+        """Run every selected metric and return rich per-metric results.
 
+        This is the single source of truth for Forge metric evaluation.
+        :meth:`run_all` is a presentation-layer wrapper around this
+        method.
+
+        Result dict shape::
+
+            {
+                "<metric_name>": {  # one entry per metric
+                    "score": float,
+                    "explanation": str,
+                    "metadata": dict,
+                    "metric_name": str,
+                    "had_error": bool,
+                    "error_message": Optional[str],
+                },
+                ...,
+                "composite_score": float,  # weighted composite
+            }
+
+        Empty registry short-circuits to ``{"composite_score": 0.0}``.
         Used by the API ``/evaluate`` endpoint to surface explanations
         and per-metric metadata to clients.
         """
         if not self.ALL_METRICS:
             logger.warning(
-                "MetricEngine.run_all_with_explanations called with no "
-                "registered metrics; returning composite_score=0.0"
+                "MetricEngine called with no registered metrics; "
+                "returning composite_score=0.0"
             )
             return {"composite_score": 0.0}
 
