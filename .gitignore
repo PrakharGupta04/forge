@@ -53,3 +53,9 @@ redis_data/
 
 # Environment examples remain tracked
 !.env.example
+
+# CI evaluation artifacts — ignore everything except the tracked baseline.
+# Using `ci_results/*` (not `ci_results/`) so the negation below can
+# re-include baseline.json; a trailing-slash dir ignore would prevent that.
+ci_results/*
+!ci_results/baseline.json

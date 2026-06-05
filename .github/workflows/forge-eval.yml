@@ -1,0 +1,123 @@
+name: Forge CI Evaluation
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: forge
+          POSTGRES_PASSWORD: forge_dev
+          POSTGRES_DB: forge
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U forge"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Install Forge
+        run: pip install -e .
+
+      - name: Apply database schema
+        run: psql "postgresql://forge:forge_dev@localhost:5432/forge" -f schema.sql
+
+      - name: Run CI evaluation
+        id: evaluate
+        env:
+          GROQ_API_KEY: ""
+          DATABASE_URL: postgresql://forge:forge_dev@localhost:5432/forge
+          LLM_PROVIDER: groq
+          REDIS_URL: ""
+          CI: "true"
+        run: python scripts/ci_evaluation.py
+
+      - name: Post PR comment
+        if: ${{ always() && github.event_name == 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            const METRIC_LABELS = {
+              step_efficiency: 'Step efficiency',
+              tool_call_fidelity: 'Tool call fidelity',
+              recovery_rate: 'Recovery rate',
+            };
+
+            const pct = (v) =>
+              typeof v === 'number' ? `${(v * 100).toFixed(1)}%` : 'n/a';
+
+            let body;
+            const path = 'ci_results/eval_results.json';
+            const evalOutcome = '${{ steps.evaluate.outcome }}';
+
+            if (!fs.existsSync(path)) {
+              body = [
+                '## Forge CI Evaluation',
+                '',
+                'Structural metrics only (no LLM calls) — deterministic and reproducible',
+                '',
+                '⚠️ The evaluation did not produce a results file. Check the workflow logs.',
+              ].join('\n');
+            } else {
+              let data = {};
+              try {
+                data = JSON.parse(fs.readFileSync(path, 'utf8'));
+              } catch (e) {
+                data = {};
+              }
+              const scores = (data && data.aggregate_scores) || {};
+
+              const rows = Object.keys(METRIC_LABELS).map(
+                (k) => `| ${METRIC_LABELS[k]} | ${pct(scores[k])} |`,
+              );
+
+              const composite = pct(scores.composite_score);
+              const regression = evalOutcome === 'failure';
+
+              body = [
+                '## Forge CI Evaluation',
+                '',
+                'Structural metrics only (no LLM calls) — deterministic and reproducible',
+                '',
+                `Agent \`${data.agent_id || 'ci_agent'}\` · benchmark \`${data.benchmark || 'factual_research'}\` · ${data.completed_tasks ?? 0}/${data.total_tasks ?? 0} tasks completed`,
+                '',
+                '| Metric | Score |',
+                '| --- | --- |',
+                ...rows,
+                '',
+                `**Composite score: ${composite}**`,
+                '',
+                regression
+                  ? '🔴 **Regression detected** (or the evaluation step failed) — composite fell more than 0.1 below the committed baseline, or the run errored. See the workflow logs for the baseline/current/delta breakdown.'
+                  : '🟢 No regression detected against the committed baseline.',
+              ].join('\n');
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
