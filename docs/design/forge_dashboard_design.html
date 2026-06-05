@@ -1,0 +1,356 @@
+
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: #F8F9FA; color: #1A1D23; }
+    .nav { background: #FFFFFF; border-bottom: 1px solid #E5E7EB; padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-brand { display: flex; align-items: center; gap: 8px; }
+    .nav-logo { width: 28px; height: 28px; background: #1A1D23; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+    .nav-logo span { color: #fff; font-size: 12px; font-weight: 700; letter-spacing: -0.5px; }
+    .nav-title { font-size: 15px; font-weight: 600; color: #1A1D23; letter-spacing: -0.3px; }
+    .nav-version { font-size: 11px; color: #9CA3AF; background: #F3F4F6; padding: 2px 6px; border-radius: 4px; }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-link { font-size: 13px; color: #6B7280; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+    .nav-link:hover { background: #F3F4F6; color: #374151; }
+    .nav-link.active { background: #F0F4FF; color: #2563EB; font-weight: 500; }
+    .nav-right { display: flex; align-items: center; gap: 8px; }
+    .health-dot { width: 8px; height: 8px; border-radius: 50%; background: #10B981; }
+    .health-text { font-size: 12px; color: #6B7280; }
+    .layout { display: flex; height: calc(100vh - 52px); overflow: hidden; }
+    .sidebar { width: 200px; background: #FFFFFF; border-right: 1px solid #E5E7EB; padding: 16px 12px; flex-shrink: 0; overflow-y: auto; }
+    .sidebar-section { margin-bottom: 20px; }
+    .sidebar-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #9CA3AF; padding: 0 8px; margin-bottom: 6px; }
+    .sidebar-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #6B7280; margin-bottom: 2px; }
+    .sidebar-item:hover { background: #F9FAFB; color: #374151; }
+    .sidebar-item.active { background: #EFF6FF; color: #2563EB; font-weight: 500; }
+    .sidebar-icon { font-size: 15px; width: 16px; flex-shrink: 0; }
+    .main { flex: 1; overflow-y: auto; background: #F8F9FA; }
+    .page-header { background: #FFFFFF; border-bottom: 1px solid #E5E7EB; padding: 16px 24px 0; }
+    .page-title { font-size: 18px; font-weight: 600; color: #111827; }
+    .page-sub { font-size: 13px; color: #6B7280; margin-top: 2px; }
+    .page-tabs { display: flex; gap: 0; margin-top: 14px; }
+    .page-tab { font-size: 13px; color: #6B7280; padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .page-tab.active { color: #2563EB; border-bottom-color: #2563EB; font-weight: 500; }
+    .content { padding: 20px 24px; }
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat { background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 16px; }
+    .stat-label { font-size: 11px; color: #9CA3AF; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .stat-value { font-size: 22px; font-weight: 600; color: #111827; letter-spacing: -0.5px; }
+    .stat-delta { font-size: 12px; margin-top: 2px; }
+    .stat-delta.up { color: #10B981; }
+    .stat-delta.down { color: #EF4444; }
+    .stat-delta.neutral { color: #9CA3AF; }
+    .card { background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; }
+    .card-header { padding: 14px 16px; border-bottom: 1px solid #F3F4F6; display: flex; align-items: center; justify-content: space-between; }
+    .card-title { font-size: 13px; font-weight: 600; color: #374151; }
+    .card-body { padding: 16px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .metric-bars { display: flex; flex-direction: column; gap: 10px; }
+    .metric-bar-row { display: flex; align-items: center; gap: 10px; }
+    .metric-bar-label { font-size: 12px; color: #6B7280; width: 130px; flex-shrink: 0; }
+    .metric-bar-track { flex: 1; background: #F3F4F6; border-radius: 4px; height: 8px; overflow: hidden; }
+    .metric-bar-fill { height: 100%; border-radius: 4px; }
+    .metric-bar-val { font-size: 12px; font-weight: 500; color: #374151; width: 36px; text-align: right; flex-shrink: 0; }
+    .green-fill { background: #10B981; }
+    .yellow-fill { background: #F59E0B; }
+    .red-fill { background: #EF4444; }
+    .blue-fill { background: #3B82F6; }
+    .steps { display: flex; flex-direction: column; gap: 8px; }
+    .step-card { border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; }
+    .step-header { padding: 10px 12px; display: flex; align-items: center; gap: 10px; background: #FAFAFA; cursor: pointer; }
+    .step-idx { font-size: 11px; color: #9CA3AF; width: 20px; }
+    .step-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.3px; }
+    .badge-llm { background: #EFF6FF; color: #1D4ED8; }
+    .badge-tool { background: #F5F3FF; color: #5B21B6; }
+    .badge-error { background: #FEF2F2; color: #B91C1C; }
+    .step-tool { font-size: 12px; color: #6B7280; }
+    .step-dur { font-size: 11px; color: #D1D5DB; margin-left: auto; }
+    .step-body { padding: 10px 12px; border-top: 1px solid #F3F4F6; }
+    .step-row { margin-bottom: 6px; }
+    .step-row-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #9CA3AF; margin-bottom: 2px; }
+    .step-row-val { font-size: 12px; color: #374151; line-height: 1.5; }
+    .composite-badge { display: inline-flex; align-items: center; gap: 6px; background: #F0FDF4; border: 1px solid #BBF7D0; padding: 6px 12px; border-radius: 20px; }
+    .composite-num { font-size: 20px; font-weight: 700; color: #059669; }
+    .composite-label { font-size: 12px; color: #6B7280; }
+    .btn { font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 6px; border: 1px solid #E5E7EB; background: #FFFFFF; color: #374151; cursor: pointer; }
+    .btn-primary { background: #2563EB; border-color: #2563EB; color: #FFFFFF; }
+    .input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .input { font-size: 13px; padding: 7px 10px; border: 1px solid #E5E7EB; border-radius: 6px; background: #FFFFFF; color: #374151; outline: none; width: 100%; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; padding: 8px 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #9CA3AF; border-bottom: 1px solid #F3F4F6; }
+    td { padding: 9px 10px; border-bottom: 1px solid #F9FAFB; color: #374151; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #FAFAFA; }
+    .score-pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+    .pill-green { background: #F0FDF4; color: #059669; }
+    .pill-yellow { background: #FFFBEB; color: #D97706; }
+    .pill-red { background: #FEF2F2; color: #DC2626; }
+    .pill-blue { background: #EFF6FF; color: #2563EB; }
+    .empty-state { text-align: center; padding: 32px; color: #9CA3AF; font-size: 13px; }
+    .alert { border: 1px solid #FED7AA; background: #FFF7ED; border-radius: 8px; padding: 10px 14px; display: flex; gap: 8px; align-items: flex-start; margin-bottom: 12px; }
+    .alert-icon { color: #F59E0B; font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .alert-text { font-size: 12px; color: #92400E; line-height: 1.5; }
+    </style>
+    
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: #F8F9FA; height: 580px; display: flex; flex-direction: column; border-radius: 10px; overflow: hidden; border: 1px solid #E5E7EB;">
+    
+    <div class="nav">
+      <div class="nav-brand">
+        <div class="nav-logo"><span>F</span></div>
+        <span class="nav-title">Forge</span>
+        <span class="nav-version">v0.1.0</span>
+      </div>
+      <div class="nav-links">
+        <div class="nav-link active">Evaluate</div>
+        <div class="nav-link" onclick="showPage('leaderboard')">Leaderboard</div>
+        <div class="nav-link" onclick="showPage('explorer')">Explorer</div>
+        <div class="nav-link" onclick="showPage('regression')">Regression</div>
+      </div>
+      <div class="nav-right">
+        <div class="health-dot"></div>
+        <span class="health-text">All systems healthy</span>
+      </div>
+    </div>
+    
+    <div class="layout">
+      <div class="main" id="main-content">
+    
+        <div id="page-evaluate">
+          <div class="page-header">
+            <div class="page-title">Evaluate trajectory</div>
+            <div class="page-sub">Submit an agent execution trace and receive metric scores with explanations</div>
+            <div class="page-tabs">
+              <div class="page-tab active">Single evaluation</div>
+              <div class="page-tab">Batch</div>
+            </div>
+          </div>
+          <div class="content">
+            <div class="two-col">
+              <div>
+                <div class="card" style="margin-bottom: 12px;">
+                  <div class="card-header">
+                    <span class="card-title">Trajectory JSON</span>
+                    <button class="btn" style="font-size:11px; padding:4px 10px;">Load sample</button>
+                  </div>
+                  <div class="card-body">
+                    <textarea class="input" style="height:120px; font-family:monospace; font-size:11px; resize:none;" placeholder='{"trajectory_id": "...", "task": "...", "steps": [...]}'></textarea>
+                    <div style="display:flex; gap:8px; margin-top:10px; align-items:center;">
+                      <select class="input" style="width:auto; font-size:12px;">
+                        <option>Equal weights</option>
+                        <option>Research weights</option>
+                      </select>
+                      <label style="font-size:12px; color:#6B7280; display:flex; align-items:center; gap:4px; white-space:nowrap;">
+                        <input type="checkbox" checked> Include explanations
+                      </label>
+                      <button class="btn btn-primary" style="margin-left:auto; white-space:nowrap;">Run evaluation</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div>
+                <div class="card">
+                  <div class="card-header">
+                    <span class="card-title">Evaluation results</span>
+                    <div class="composite-badge">
+                      <span class="composite-num">73.2%</span>
+                      <span class="composite-label">composite</span>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="metric-bars">
+                      <div class="metric-bar-row">
+                        <div class="metric-bar-label">Task completion</div>
+                        <div class="metric-bar-track"><div class="metric-bar-fill green-fill" style="width:100%"></div></div>
+                        <div class="metric-bar-val" style="color:#059669">100%</div>
+                      </div>
+                      <div class="metric-bar-row">
+                        <div class="metric-bar-label">Tool call fidelity</div>
+                        <div class="metric-bar-track"><div class="metric-bar-fill red-fill" style="width:0%"></div></div>
+                        <div class="metric-bar-val" style="color:#DC2626">0%</div>
+                      </div>
+                      <div class="metric-bar-row">
+                        <div class="metric-bar-label">Step efficiency</div>
+                        <div class="metric-bar-track"><div class="metric-bar-fill yellow-fill" style="width:66.7%"></div></div>
+                        <div class="metric-bar-val" style="color:#D97706">66.7%</div>
+                      </div>
+                      <div class="metric-bar-row">
+                        <div class="metric-bar-label">Reasoning coherence</div>
+                        <div class="metric-bar-track"><div class="metric-bar-fill yellow-fill" style="width:46%"></div></div>
+                        <div class="metric-bar-val" style="color:#D97706">46%</div>
+                      </div>
+                      <div class="metric-bar-row">
+                        <div class="metric-bar-label">Hallucination score</div>
+                        <div class="metric-bar-track"><div class="metric-bar-fill green-fill" style="width:100%"></div></div>
+                        <div class="metric-bar-val" style="color:#059669">100%</div>
+                      </div>
+                      <div class="metric-bar-row">
+                        <div class="metric-bar-label">Recovery rate</div>
+                        <div class="metric-bar-track"><div class="metric-bar-fill green-fill" style="width:100%"></div></div>
+                        <div class="metric-bar-val" style="color:#059669">100%</div>
+                      </div>
+                      <div class="metric-bar-row">
+                        <div class="metric-bar-label">Multi-turn consistency</div>
+                        <div class="metric-bar-track"><div class="metric-bar-fill green-fill" style="width:100%"></div></div>
+                        <div class="metric-bar-val" style="color:#059669">100%</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+    
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Metric explanations</span>
+              </div>
+              <div class="card-body" style="padding:0;">
+                <table>
+                  <thead><tr><th style="width:160px">Metric</th><th style="width:60px">Score</th><th>Explanation</th></tr></thead>
+                  <tbody>
+                    <tr><td style="font-weight:500">Task completion</td><td><span class="score-pill pill-green">100%</span></td><td style="color:#6B7280; font-size:12px">Agent correctly identified Tokyo as the capital of Japan and provided a complete, accurate answer.</td></tr>
+                    <tr><td style="font-weight:500">Tool call fidelity</td><td><span class="score-pill pill-red">0%</span></td><td style="color:#6B7280; font-size:12px">No golden trajectory available in metadata — fidelity score cannot be computed for this evaluation.</td></tr>
+                    <tr><td style="font-weight:500">Step efficiency</td><td><span class="score-pill pill-yellow">66.7%</span></td><td style="color:#6B7280; font-size:12px">Agent used 3 steps where minimum estimated is 2. Slightly over-verbose reasoning chain.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+        <div id="page-leaderboard" style="display:none;">
+          <div class="page-header">
+            <div class="page-title">Benchmark leaderboard</div>
+            <div class="page-sub">Ranked agent performance across benchmark runs</div>
+            <div class="page-tabs">
+              <div class="page-tab active">All benchmarks</div>
+              <div class="page-tab">Factual research</div>
+              <div class="page-tab">Code tasks</div>
+            </div>
+          </div>
+          <div class="content">
+            <div style="display:flex; gap:8px; margin-bottom:16px; align-items:center;">
+              <input class="input" style="max-width:200px;" placeholder="Filter by agent ID">
+              <select class="input" style="width:auto; font-size:12px;"><option>All benchmarks</option></select>
+              <label style="font-size:12px; color:#6B7280; display:flex; align-items:center; gap:4px; margin-left:auto;">
+                <input type="checkbox"> Show mock agents
+              </label>
+            </div>
+            <div class="card">
+              <div class="empty-state">
+                <div style="font-size:32px; margin-bottom:8px;">📊</div>
+                <div style="font-weight:500; color:#374151; margin-bottom:4px;">No benchmark results yet</div>
+                <div>Run a real-agent benchmark via POST /benchmark/run to see rankings here.</div>
+                <div style="margin-top:8px; font-size:11px; color:#D1D5DB;">Mock agent runs are excluded by default.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+        <div id="page-explorer" style="display:none;">
+          <div class="page-header">
+            <div class="page-title">Trajectory explorer</div>
+            <div class="page-sub">Inspect agent execution steps, tool calls, and per-step debugging information</div>
+            <div class="page-tabs">
+              <div class="page-tab active">Steps</div>
+              <div class="page-tab">Scores</div>
+              <div class="page-tab">Raw JSON</div>
+            </div>
+          </div>
+          <div class="content">
+            <div class="input-row">
+              <input class="input" placeholder="Paste trajectory UUID..." value="12274f96-e063-4ca5-95d7-f5e2f5389023">
+              <button class="btn btn-primary" style="white-space:nowrap;">Load trajectory</button>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; padding:12px; background:#FFFFFF; border:1px solid #E5E7EB; border-radius:8px;">
+              <div style="font-size:12px;"><span style="color:#9CA3AF;">Task: </span><span style="font-weight:500;">What is the capital of Japan?</span></div>
+              <div style="font-size:12px; margin-left:auto;"><span style="color:#9CA3AF;">Agent: </span><span>manual_check_agent</span></div>
+              <div style="font-size:12px;"><span style="color:#9CA3AF;">Ground truth: </span><span style="color:#059669; font-weight:500;">Tokyo</span></div>
+              <div style="font-size:12px;"><span style="color:#9CA3AF;">Answer: </span><span>The capital of Japan is Tokyo.</span></div>
+              <div style="font-size:12px;"><span style="color:#9CA3AF;">Composite: </span><span class="score-pill pill-green" style="font-size:11px;">73.2%</span></div>
+            </div>
+            <div class="steps">
+              <div class="step-card">
+                <div class="step-header">
+                  <span class="step-idx">0</span>
+                  <span class="step-badge badge-llm">LLM CALL</span>
+                  <span class="step-tool">Reasoning step</span>
+                  <span class="step-dur">100ms · 15 tok</span>
+                </div>
+                <div class="step-body">
+                  <div class="step-row"><div class="step-row-label">Input</div><div class="step-row-val">What is the capital of Japan?</div></div>
+                  <div class="step-row"><div class="step-row-label">Output</div><div class="step-row-val" style="color:#374151;">I should search for this.</div></div>
+                </div>
+              </div>
+              <div class="step-card">
+                <div class="step-header">
+                  <span class="step-idx">1</span>
+                  <span class="step-badge badge-tool">TOOL CALL</span>
+                  <span class="step-tool">web_search</span>
+                  <span class="step-dur">400ms · 0 tok</span>
+                </div>
+                <div class="step-body">
+                  <div class="step-row"><div class="step-row-label">Input</div><div class="step-row-val" style="font-family:monospace; font-size:11px; background:#F9FAFB; padding:6px; border-radius:4px;">"capital of Japan"</div></div>
+                  <div class="step-row"><div class="step-row-label">Output</div><div class="step-row-val">Tokyo is the capital of Japan.</div></div>
+                </div>
+              </div>
+              <div class="step-card">
+                <div class="step-header">
+                  <span class="step-idx">2</span>
+                  <span class="step-badge badge-llm">LLM CALL</span>
+                  <span class="step-tool">Synthesis step</span>
+                  <span class="step-dur">200ms · 20 tok</span>
+                </div>
+                <div class="step-body">
+                  <div class="step-row"><div class="step-row-label">Input</div><div class="step-row-val">Search returned Tokyo</div></div>
+                  <div class="step-row"><div class="step-row-label">Output</div><div class="step-row-val" style="color:#059669; font-weight:500;">The capital of Japan is Tokyo.</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+        <div id="page-regression" style="display:none;">
+          <div class="page-header">
+            <div class="page-title">Regression monitor</div>
+            <div class="page-sub">Track evaluation score changes across benchmark runs for a given agent</div>
+            <div class="page-tabs">
+              <div class="page-tab active">Score history</div>
+              <div class="page-tab">Alerts</div>
+            </div>
+          </div>
+          <div class="content">
+            <div class="input-row">
+              <input class="input" placeholder="Enter agent ID..." style="max-width:240px;">
+              <button class="btn btn-primary">Load history</button>
+            </div>
+            <div class="alert">
+              <span class="alert-icon">⚠</span>
+              <div class="alert-text"><strong>Comparability warning:</strong> Regression analysis only compares runs with identical evaluation config (same judge model, same weighting strategy). Runs with different configs are shown but excluded from regression calculations.</div>
+            </div>
+            <div class="card">
+              <div class="empty-state">
+                <div style="font-size:32px; margin-bottom:8px;">📈</div>
+                <div style="font-weight:500; color:#374151; margin-bottom:4px;">Enter an agent ID to view score history</div>
+                <div>At least 2 benchmark runs with identical evaluation config are required for regression analysis.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+      </div>
+    </div>
+    </div>
+    
+    <script>
+    function showPage(name) {
+      ['evaluate','leaderboard','explorer','regression'].forEach(p => {
+        document.getElementById('page-'+p).style.display = p===name?'block':'none';
+      });
+      document.querySelectorAll('.nav-link').forEach((el,i) => {
+        const pages = ['evaluate','leaderboard','explorer','regression'];
+        el.classList.toggle('active', pages[i]===name);
+      });
+    }
+    </script>
+    
