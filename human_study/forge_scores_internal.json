@@ -1,0 +1,340 @@
+{
+  "metadata": {
+    "export_timestamp": "2026-06-06T06:36:04.926058+00:00",
+    "trajectory_count": 30,
+    "forge_version": "0.1.0",
+    "note": "Internal automated scores. Do NOT show to human raters."
+  },
+  "scores": [
+    {
+      "trajectory_id": "cbd81273-836f-4ad6-855d-c1f40298d91b",
+      "task_completion": 1.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.6666666666666666,
+      "reasoning_coherence": 0.8020114302635193,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "3b44d541-7811-475b-b884-fc2131f6c42b",
+      "task_completion": 1.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.6666666666666666,
+      "reasoning_coherence": 0.8020114302635193,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "6c0fa183-d3a1-4763-9dc7-7acf616cf58a",
+      "task_completion": 1.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.6666666666666666,
+      "reasoning_coherence": 0.8020114302635193,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "ca8f658a-138e-4c76-9eb2-5ea32e8ba578",
+      "task_completion": 0.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 0.5,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.5000000000000001
+    },
+    {
+      "trajectory_id": "3b699fa6-4c4f-41cc-ae2c-a88ce8112e0c",
+      "task_completion": 0.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 0.5,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.5000000000000001
+    },
+    {
+      "trajectory_id": "563bf4b8-b678-4331-b66d-f08102aba98d",
+      "task_completion": 0.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 0.5,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.5000000000000001
+    },
+    {
+      "trajectory_id": "3eab4826-dcf4-4192-b867-53a4cde839e4",
+      "task_completion": 0.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 0.5,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.5000000000000001
+    },
+    {
+      "trajectory_id": "f9dfffde-1e0a-4a31-9994-e93075d95b87",
+      "task_completion": 0.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 0.5,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.5000000000000001
+    },
+    {
+      "trajectory_id": "a13bf779-c252-45ae-b9f5-0a41f380c65c",
+      "task_completion": 1.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.6666666666666666,
+      "reasoning_coherence": 0.4716436266899109,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "af34b832-e3a7-4b0e-8798-fbb69549c852",
+      "task_completion": 1.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.6666666666666666,
+      "reasoning_coherence": 0.8020114302635193,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "c54fd0ed-e280-4e60-8354-607f3e690b9d",
+      "task_completion": 1.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.6666666666666666,
+      "reasoning_coherence": 0.8020114302635193,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "ac04c1f7-58ee-44cc-a167-be732dc89daf",
+      "task_completion": 1.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.6666666666666666,
+      "reasoning_coherence": 0.8020114302635193,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "ff69f913-b97a-46c2-9b72-936f35a87f03",
+      "task_completion": 1.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.6666666666666666,
+      "reasoning_coherence": 0.8020114302635193,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "d3746eaf-dbd9-4db7-b039-475bd185cd94",
+      "task_completion": 0.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 0.5,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.5000000000000001
+    },
+    {
+      "trajectory_id": "9fb304d0-c21c-4355-91d5-cdfb0dc66ede",
+      "task_completion": 0.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 0.5,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.5000000000000001
+    },
+    {
+      "trajectory_id": "fb11afe6-b481-457a-9d0c-4701f848332d",
+      "task_completion": 0.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 0.5,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.5000000000000001
+    },
+    {
+      "trajectory_id": "e53bb041-a02a-4a17-b3ce-e75a6368d170",
+      "task_completion": 0.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 0.5,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.5000000000000001
+    },
+    {
+      "trajectory_id": "12274f96-e063-4ca5-95d7-f5e2f5389023",
+      "task_completion": 1.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.6666666666666666,
+      "reasoning_coherence": 0.46014857292175293,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "6ee0dbf7-1fb1-44b2-be96-83a5bdad4e09",
+      "task_completion": 0.5,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 1.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.7857142857142858
+    },
+    {
+      "trajectory_id": "9a14fded-08e1-4989-93f3-e152f04525fb",
+      "task_completion": 0.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 0.5,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.5000000000000001
+    },
+    {
+      "trajectory_id": "de4c92a7-d4f1-401f-9f45-1dbafb9f5462",
+      "task_completion": 0.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 0.5,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.5000000000000001
+    },
+    {
+      "trajectory_id": "c29c8e0b-7e8b-4c0d-8f95-32d0deda8401",
+      "task_completion": 1.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 1.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "dc00d553-1aa3-493a-b7f5-bd8f9329b2b2",
+      "task_completion": 1.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 1.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "d0607f61-557d-4365-8663-fff60abf5fa8",
+      "task_completion": 0.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 0.5,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.5000000000000001
+    },
+    {
+      "trajectory_id": "17e30e60-8248-4dc8-94d9-20c68087f1c3",
+      "task_completion": 0.0,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 0.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 0.5,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": 0.5000000000000001
+    },
+    {
+      "trajectory_id": "ff88b651-a9f7-4dd6-9d42-a56689230021",
+      "task_completion": 0.5,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 1.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "6d980855-3df6-4a63-b136-d6b1d6a0125f",
+      "task_completion": 0.5,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 1.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "eec7bd0f-3a62-44e9-93b9-cadb14c0f12b",
+      "task_completion": 0.5,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 1.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "3415b61a-4460-4f52-b251-b6e30792bbfe",
+      "task_completion": 0.5,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 1.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    },
+    {
+      "trajectory_id": "f1da5fb1-c0d3-41bc-b1b2-35317bf1b40c",
+      "task_completion": 0.5,
+      "tool_call_fidelity": 0.0,
+      "step_efficiency": 1.0,
+      "reasoning_coherence": 1.0,
+      "hallucination_score": 1.0,
+      "recovery_rate": 1.0,
+      "multi_turn_consistency": null,
+      "composite_score": null
+    }
+  ]
+}

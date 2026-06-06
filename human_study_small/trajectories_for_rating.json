@@ -1,0 +1,120 @@
+{
+  "metadata": {
+    "export_timestamp": "2026-06-06T06:36:24.044828+00:00",
+    "trajectory_count": 10,
+    "forge_version": "0.1.0",
+    "note": "forge_scores are not shown to raters during rating \u2014 they are stored separately in forge_scores_internal.json and used only for correlation analysis."
+  },
+  "trajectories": [
+    {
+      "id": 1,
+      "trajectory_id": "cbd81273-836f-4ad6-855d-c1f40298d91b",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search for the capital of Japan.",
+        "Step 1: tool_call \u2014 Tokyo is the capital of Japan.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    },
+    {
+      "id": 2,
+      "trajectory_id": "3b44d541-7811-475b-b884-fc2131f6c42b",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search for the capital of Japan.",
+        "Step 1: tool_call \u2014 Tokyo is the capital of Japan.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    },
+    {
+      "id": 3,
+      "trajectory_id": "6c0fa183-d3a1-4763-9dc7-7acf616cf58a",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search for the capital of Japan.",
+        "Step 1: tool_call \u2014 Tokyo is the capital of Japan.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    },
+    {
+      "id": 4,
+      "trajectory_id": "ca8f658a-138e-4c76-9eb2-5ea32e8ba578",
+      "task": "What is the birth year of the original creator of the Java programming language?",
+      "ground_truth": "1955",
+      "final_answer": "Mock answer for benchmark task: What is the birth year of the original creator of the Java programming language?",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 5,
+      "trajectory_id": "3b699fa6-4c4f-41cc-ae2c-a88ce8112e0c",
+      "task": "In what year was the first Nobel Prize awarded in the category in which Marie Curie won her first Nobel Prize?",
+      "ground_truth": "1901",
+      "final_answer": "Mock answer for benchmark task: In what year was the first Nobel Prize awarded in the category in which Marie Cu",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 6,
+      "trajectory_id": "563bf4b8-b678-4331-b66d-f08102aba98d",
+      "task": "What is the name of the river that flows through the birthplace of William Shakespeare?",
+      "ground_truth": "River Avon",
+      "final_answer": "Mock answer for benchmark task: What is the name of the river that flows through the birthplace of William Shake",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 7,
+      "trajectory_id": "3eab4826-dcf4-4192-b867-53a4cde839e4",
+      "task": "What is the birth year of the author of 'Pride and Prejudice'?",
+      "ground_truth": "1775",
+      "final_answer": "Mock answer for benchmark task: What is the birth year of the author of 'Pride and Prejudice'?",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 8,
+      "trajectory_id": "f9dfffde-1e0a-4a31-9994-e93075d95b87",
+      "task": "In what year was the company co-founded by Bill Gates and Paul Allen established?",
+      "ground_truth": "1975",
+      "final_answer": "Mock answer for benchmark task: In what year was the company co-founded by Bill Gates and Paul Allen established",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 9,
+      "trajectory_id": "a13bf779-c252-45ae-b9f5-0a41f380c65c",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search.",
+        "Step 1: tool_call \u2014 Tokyo is the capital.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    },
+    {
+      "id": 10,
+      "trajectory_id": "af34b832-e3a7-4b0e-8798-fbb69549c852",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search for the capital of Japan.",
+        "Step 1: tool_call \u2014 Tokyo is the capital of Japan.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    }
+  ]
+}

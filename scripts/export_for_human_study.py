@@ -116,6 +116,8 @@ def _fetch_recent(db: Database, limit: int) -> list[dict]:
             ORDER BY ev.evaluated_at DESC
             LIMIT 1
         ) e ON true
+        -- Research corpus filter — only exports human_study_agent trajectories with real multi-step execution
+        WHERE t.agent_id = 'human_study_agent' AND t.total_steps >= 2
         ORDER BY t.created_at DESC
         LIMIT %s
     """
@@ -230,6 +232,7 @@ def main() -> int:
     print(f"Requested count : {args.count}")
     print(f"Output directory: {output_dir.resolve()}")
     print(f"Forge version   : {FORGE_VERSION}")
+    print("Export filter: agent_id=human_study_agent, min_steps=2")
     print("-" * 56)
 
     try:

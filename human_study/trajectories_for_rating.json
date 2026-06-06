@@ -1,0 +1,340 @@
+{
+  "metadata": {
+    "export_timestamp": "2026-06-06T06:36:04.926058+00:00",
+    "trajectory_count": 30,
+    "forge_version": "0.1.0",
+    "note": "forge_scores are not shown to raters during rating \u2014 they are stored separately in forge_scores_internal.json and used only for correlation analysis."
+  },
+  "trajectories": [
+    {
+      "id": 1,
+      "trajectory_id": "cbd81273-836f-4ad6-855d-c1f40298d91b",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search for the capital of Japan.",
+        "Step 1: tool_call \u2014 Tokyo is the capital of Japan.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    },
+    {
+      "id": 2,
+      "trajectory_id": "3b44d541-7811-475b-b884-fc2131f6c42b",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search for the capital of Japan.",
+        "Step 1: tool_call \u2014 Tokyo is the capital of Japan.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    },
+    {
+      "id": 3,
+      "trajectory_id": "6c0fa183-d3a1-4763-9dc7-7acf616cf58a",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search for the capital of Japan.",
+        "Step 1: tool_call \u2014 Tokyo is the capital of Japan.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    },
+    {
+      "id": 4,
+      "trajectory_id": "ca8f658a-138e-4c76-9eb2-5ea32e8ba578",
+      "task": "What is the birth year of the original creator of the Java programming language?",
+      "ground_truth": "1955",
+      "final_answer": "Mock answer for benchmark task: What is the birth year of the original creator of the Java programming language?",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 5,
+      "trajectory_id": "3b699fa6-4c4f-41cc-ae2c-a88ce8112e0c",
+      "task": "In what year was the first Nobel Prize awarded in the category in which Marie Curie won her first Nobel Prize?",
+      "ground_truth": "1901",
+      "final_answer": "Mock answer for benchmark task: In what year was the first Nobel Prize awarded in the category in which Marie Cu",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 6,
+      "trajectory_id": "563bf4b8-b678-4331-b66d-f08102aba98d",
+      "task": "What is the name of the river that flows through the birthplace of William Shakespeare?",
+      "ground_truth": "River Avon",
+      "final_answer": "Mock answer for benchmark task: What is the name of the river that flows through the birthplace of William Shake",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 7,
+      "trajectory_id": "3eab4826-dcf4-4192-b867-53a4cde839e4",
+      "task": "What is the birth year of the author of 'Pride and Prejudice'?",
+      "ground_truth": "1775",
+      "final_answer": "Mock answer for benchmark task: What is the birth year of the author of 'Pride and Prejudice'?",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 8,
+      "trajectory_id": "f9dfffde-1e0a-4a31-9994-e93075d95b87",
+      "task": "In what year was the company co-founded by Bill Gates and Paul Allen established?",
+      "ground_truth": "1975",
+      "final_answer": "Mock answer for benchmark task: In what year was the company co-founded by Bill Gates and Paul Allen established",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 9,
+      "trajectory_id": "a13bf779-c252-45ae-b9f5-0a41f380c65c",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search.",
+        "Step 1: tool_call \u2014 Tokyo is the capital.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    },
+    {
+      "id": 10,
+      "trajectory_id": "af34b832-e3a7-4b0e-8798-fbb69549c852",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search for the capital of Japan.",
+        "Step 1: tool_call \u2014 Tokyo is the capital of Japan.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    },
+    {
+      "id": 11,
+      "trajectory_id": "c54fd0ed-e280-4e60-8354-607f3e690b9d",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search for the capital of Japan.",
+        "Step 1: tool_call \u2014 Tokyo is the capital of Japan.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    },
+    {
+      "id": 12,
+      "trajectory_id": "ac04c1f7-58ee-44cc-a167-be732dc89daf",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search for the capital of Japan.",
+        "Step 1: tool_call \u2014 Tokyo is the capital of Japan.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    },
+    {
+      "id": 13,
+      "trajectory_id": "ff69f913-b97a-46c2-9b72-936f35a87f03",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search for the capital of Japan.",
+        "Step 1: tool_call \u2014 Tokyo is the capital of Japan.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    },
+    {
+      "id": 14,
+      "trajectory_id": "d3746eaf-dbd9-4db7-b039-475bd185cd94",
+      "task": "What is the birth year of the author of 'Pride and Prejudice'?",
+      "ground_truth": "1775",
+      "final_answer": "Mock answer for benchmark task: What is the birth year of the author of 'Pride and Prejudice'?",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 15,
+      "trajectory_id": "9fb304d0-c21c-4355-91d5-cdfb0dc66ede",
+      "task": "In what year was the company co-founded by Bill Gates and Paul Allen established?",
+      "ground_truth": "1975",
+      "final_answer": "Mock answer for benchmark task: In what year was the company co-founded by Bill Gates and Paul Allen established",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 16,
+      "trajectory_id": "fb11afe6-b481-457a-9d0c-4701f848332d",
+      "task": "What is the birth year of the author of 'Pride and Prejudice'?",
+      "ground_truth": "1775",
+      "final_answer": "Mock answer for benchmark task: What is the birth year of the author of 'Pride and Prejudice'?",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 17,
+      "trajectory_id": "e53bb041-a02a-4a17-b3ce-e75a6368d170",
+      "task": "In what year was the company co-founded by Bill Gates and Paul Allen established?",
+      "ground_truth": "1975",
+      "final_answer": "Mock answer for benchmark task: In what year was the company co-founded by Bill Gates and Paul Allen established",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 18,
+      "trajectory_id": "12274f96-e063-4ca5-95d7-f5e2f5389023",
+      "task": "What is the capital of Japan?",
+      "ground_truth": "Tokyo",
+      "final_answer": "The capital of Japan is Tokyo.",
+      "num_steps": 3,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should search for this.",
+        "Step 1: tool_call \u2014 Tokyo is the capital of Japan.",
+        "Step 2: llm_call \u2014 The capital of Japan is Tokyo."
+      ]
+    },
+    {
+      "id": 19,
+      "trajectory_id": "6ee0dbf7-1fb1-44b2-be96-83a5bdad4e09",
+      "task": "Storage roundtrip test",
+      "ground_truth": "test",
+      "final_answer": "test answer",
+      "num_steps": 2,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should answer concisely.",
+        "Step 1: tool_call \u2014 test answer"
+      ]
+    },
+    {
+      "id": 20,
+      "trajectory_id": "9a14fded-08e1-4989-93f3-e152f04525fb",
+      "task": "What is the birth year of the author of 'Pride and Prejudice'?",
+      "ground_truth": "1775",
+      "final_answer": "Mock answer for benchmark task: What is the birth year of the author of 'Pride and Prejudice'?",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 21,
+      "trajectory_id": "de4c92a7-d4f1-401f-9f45-1dbafb9f5462",
+      "task": "In what year was the company co-founded by Bill Gates and Paul Allen established?",
+      "ground_truth": "1975",
+      "final_answer": "Mock answer for benchmark task: In what year was the company co-founded by Bill Gates and Paul Allen established",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 22,
+      "trajectory_id": "c29c8e0b-7e8b-4c0d-8f95-32d0deda8401",
+      "task": "What is the capital of France?",
+      "ground_truth": "Paris is the capital of France.",
+      "final_answer": "Paris is the capital of France.",
+      "num_steps": 2,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should answer concisely.",
+        "Step 1: tool_call \u2014 Paris is the capital of France."
+      ]
+    },
+    {
+      "id": 23,
+      "trajectory_id": "dc00d553-1aa3-493a-b7f5-bd8f9329b2b2",
+      "task": "What is the capital of France?",
+      "ground_truth": "Paris is the capital of France.",
+      "final_answer": "Paris is the capital of France.",
+      "num_steps": 2,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should answer concisely.",
+        "Step 1: tool_call \u2014 Paris is the capital of France."
+      ]
+    },
+    {
+      "id": 24,
+      "trajectory_id": "d0607f61-557d-4365-8663-fff60abf5fa8",
+      "task": "In what year was the company co-founded by Bill Gates and Paul Allen established?",
+      "ground_truth": "1975",
+      "final_answer": "Mock answer for benchmark task: In what year was the company co-founded by Bill Gates and Paul Allen established",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 25,
+      "trajectory_id": "17e30e60-8248-4dc8-94d9-20c68087f1c3",
+      "task": "In what year was the company co-founded by Bill Gates and Paul Allen established?",
+      "ground_truth": "1975",
+      "final_answer": "Mock answer for benchmark task: In what year was the company co-founded by Bill Gates and Paul Allen established",
+      "num_steps": 0,
+      "step_summary": []
+    },
+    {
+      "id": 26,
+      "trajectory_id": "ff88b651-a9f7-4dd6-9d42-a56689230021",
+      "task": "Provenance test task",
+      "ground_truth": "test",
+      "final_answer": "Test answer",
+      "num_steps": 2,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should answer concisely.",
+        "Step 1: tool_call \u2014 Test answer"
+      ]
+    },
+    {
+      "id": 27,
+      "trajectory_id": "6d980855-3df6-4a63-b136-d6b1d6a0125f",
+      "task": "Integration test task",
+      "ground_truth": "test",
+      "final_answer": "Test answer",
+      "num_steps": 2,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should answer concisely.",
+        "Step 1: tool_call \u2014 Test answer"
+      ]
+    },
+    {
+      "id": 28,
+      "trajectory_id": "eec7bd0f-3a62-44e9-93b9-cadb14c0f12b",
+      "task": "compare seed for integration_cmp_b",
+      "ground_truth": "test",
+      "final_answer": "Test answer",
+      "num_steps": 2,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should answer concisely.",
+        "Step 1: tool_call \u2014 Test answer"
+      ]
+    },
+    {
+      "id": 29,
+      "trajectory_id": "3415b61a-4460-4f52-b251-b6e30792bbfe",
+      "task": "compare seed for integration_cmp_a",
+      "ground_truth": "test",
+      "final_answer": "Test answer",
+      "num_steps": 2,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should answer concisely.",
+        "Step 1: tool_call \u2014 Test answer"
+      ]
+    },
+    {
+      "id": 30,
+      "trajectory_id": "f1da5fb1-c0d3-41bc-b1b2-35317bf1b40c",
+      "task": "rl-34",
+      "ground_truth": "test",
+      "final_answer": "Test answer",
+      "num_steps": 2,
+      "step_summary": [
+        "Step 0: llm_call \u2014 I should answer concisely.",
+        "Step 1: tool_call \u2014 Test answer"
+      ]
+    }
+  ]
+}
