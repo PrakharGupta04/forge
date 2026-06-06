@@ -196,9 +196,9 @@ Keep new metrics honest: document what the metric does **not** measure, and pref
 
 ## Validation
 
-Forge's metrics are designed to be process-aware, but their agreement with human judgment has **not yet been empirically measured**. The table below is a placeholder for that study.
+Forge's metrics are designed to be process-aware, but their agreement with human judgment has **not yet been empirically measured**. The planned validation study will report inter-rater agreement between each metric and human raters using **Cohen's κ (kappa)**. The table below is a placeholder for that study.
 
-| Metric | Correlation with human judgment | Status |
+| Metric | Agreement with human judgment (Cohen's κ) | Status |
 | --- | --- | --- |
 | Task Completion | TBD | Not yet validated |
 | Tool Call Fidelity | TBD | Not yet validated |
@@ -208,7 +208,7 @@ Forge's metrics are designed to be process-aware, but their agreement with human
 | Recovery Rate | TBD | Not yet validated |
 | Multi-Turn Consistency | TBD | Not yet validated |
 
-> **Note:** Human correlation study not yet conducted. The values above are placeholders and should not be cited as evidence of metric validity.
+> **Note:** Human correlation study not yet conducted. The Cohen's κ values above are placeholders (TBD) and should not be cited as evidence of metric validity.
 
 ## License
 
